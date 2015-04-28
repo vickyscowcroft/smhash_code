@@ -1,6 +1,8 @@
 # smhash_code
 Python calibration scripts for SMHASH
 
+See calibration_procedure.pdf for full documentation
+
 - calculate_aperture_correction.py 
   - Calculate the aperture correction for a single epoch. Requires a .raw file with large aperture photometry first, then PSF photometry
 - apply_aperture_correction.py
