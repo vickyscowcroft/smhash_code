@@ -1,0 +1,241 @@
+\documentclass[11pt]{article}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry\
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{2mm}
+\setlength{\topmargin}{-16mm}
+\setlength{\headheight}{10mm}
+\setlength{\headsep}{6mm}
+\setlength{\textwidth}{515pt}
+\setlength{\textheight}{230mm}
+\setlength{\oddsidemargin}{-8mm}
+\setlength{\evensidemargin}{-8mm}
+\pagestyle{myheadings}
+\markright{SMHASH Calibration Procedure}
+
+
+\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{palatino}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+%\usepackage{listings}
+%\lstset{language=Python}
+\usepackage{minted}
+\usepackage[colorlinks=true]{hyperref}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\usepackage{tikz}
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle,draw,inner sep=2pt] (char) {#1};}}
+
+\title{Calibration Process for SMHASH data}
+\author{Vicky Scowcroft }
+
+\begin{document}
+\maketitle
+Draft last edited \today
+
+\section{Python Scripts}
+\label{sec:scripts}
+
+For several of the calibration steps I have made python scripts available through the \href{https://github.com/vickyscowcroft/smhash_code}{SMHASH github repository}. Information about the scripts is given in the \href{https://github.com/vickyscowcroft/smhash_code/blob/master/README.md}{README.md} file of the repository. I have indicated in the text when scripts are available and which one you should be using, and describe the steps you should do if you want to perform the calibration steps by hand. 
+
+The python install I am using is the Ureka distribution (the one that you probably installed with IRAF if you're using a Mac) from STScI. If you have questions or comments about the python scripts please let me know.
+
+Throughout this document I will use the omegaCen\_1 data as an example. 
+
+\section{Initial Setup}
+\label{sec:initial}
+The SMHASH data comes in two forms: The individual BCDs and the mosaicked images. It is more than likely that you will be working with mosaicked images. If the file names start with SPITZER\_I and end with cbcd.fits then it is a BCD file. If it starts with a descriptive name, like Sgr or CSS then it is a mosaicked image.
+
+In either case, the images you have received will be in flux units. For daophot to work properly you need to convert the images into units of `counts'. This can be done using something like imarith in IRAF, or whatever program you choose. The equation you need to use is:
+
+\begin{equation}
+C = I \times T / F
+\end{equation}
+\label{eqn:conv_to_counts}
+where C is the image in counts, I is the original image, T is the value of the FRAME\_EX keyword in the image header, and F is the value of the FLUXCONV keyword in the image header. 
+
+The new images are now in the correct units so that you'll get reasonable uncertainties out of daophot. You should run daophot, allstar and allframe on all your images. 
+
+\section{Calibration Starting Point}
+\label{start}
+
+At this point you should have PSF magnitudes from allframe, done on the `counts' images. We will refer to this as photometry file \circled{1}. We will start working on epoch 1 of your data.
+
+\textbf{Note:} $\log$ always means $\log$10.
+
+
+\section{Aperture correction}
+\label{sec:apcor}
+For this step we work on the original images that are in flux units, i.e. before we converted them using the fluxconv and exptime keywords. 
+
+Do aperture photometry on a selection of uncrowded stars in the image. The best stars for this are probably the PSF stars. See Table~\ref{tab:apertures} for the appropriate aperture sizes.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{l c c c c} \hline
+Image type & Pixel size & A1 & Inner sky  & Outer Sky   \\ \hline \hline
+Non--mosaicked & 1.2" & 3 & 3 & 7 \\
+Mosaicked & 0.6" & 6 & 6 & 14 \\ 
+\hline
+\end{tabular}
+\caption{Aperture sizes required for calculating aperture correction}
+\label{tab:apertures}
+\end{center}
+\end{table}
+
+The photometry from the flux image is photometry file \circled{2}
+Now use daomatch and daomaster to match the results from the counts file to the flux file. Do a first pass with daomatch, then edit the match file. Copy and paste the first line to the second line (No transformation should be required, they're the same image but you're looking at different stars) and edit the file name of the second line. Then run daomaster, and get the raw output.
+
+Calculate the aperture correction required:
+\begin{equation}
+\Delta M = M_{\circled{2}} - M_{\circled{1}}
+\end{equation}
+\label{eqn:apcor}
+
+{\bf Aperture correction script:} \href{https://github.com/vickyscowcroft/smhash_code/blob/master/calculate_aperture_correction.py}{calculate\_aperture\_correction.py}
+
+\begin{minted}[bgcolor=bg]{python}
+python calculate_aperture_correction.py omegaCen_1__e1_3p6um_dn.raw 
+\end{minted}
+
+For this script the input file (a .raw file from daomaster) must have the aperture photometry in column 4 and the allframe photometry in column 6. This means that there should have been two files in the .mch file that went into daomaster, with the aperture photometry on line 1 and the allframe photometry on line 2.
+
+
+{\bf Apply aperture correction script:} \href{https://github.com/vickyscowcroft/smhash_code/blob/master/apply\_aperture\_correction.py}{apply\_aperture\_correction.py}. ({\it This script also does the zero--point correction described in Section~\ref{sec:zeropoint} and the correction to the standard aperture described in Section~\ref{sec:standard_aperture}}.)
+
+\begin{minted}[bgcolor=bg]{python}
+python apply_aperture_correction.py omegaCen_1__e1_3p6um_dn.alf A C
+\end{minted}
+
+where $A$ is the aperture correction calculated by the previous script, and C is the channel (1 or 2).
+
+The output of this script will be a file called omegaCen\_1\_\_e1\_3p6um\_dn.apc which is calibrated to the 10--native--pixel IRAC standard aperture and is on the correct zero--point (i.e. all calibration steps through Section~\ref{sec:standard_aperture} have been applied).
+
+{\bf If you are not running the scripts:} 
+
+Apply the aperture correction to \textbf{all the stars} in allframe file \circled{1}.
+\begin{equation}
+M_{\circled{3}} = M_{\circled{1}} + \Delta M
+\end{equation}
+\label{eqn:apply_apcor}
+
+\section{Zero--point correction}
+\label{sec:zeropoint}
+
+{\bf Zero point correction script:} This step is performed by the aperture correction script. I provide details of the steps here for reference, but if you've run \href{https://github.com/vickyscowcroft/smhash_code/blob/master/apply\_aperture\_correction.py}{apply\_aperture\_correction.py} you {\bf do not} need to do this step.
+
+The next step is to put the photometry on the correct zero--point.
+
+Daophot assumes an instrumental magnitude scale such that 
+\begin{equation}
+M = 25 - 2.5 \log(Counts)
+\end{equation}
+\label{eqn:dao_scale}
+
+To put the IRAC photometry on the correct scale we must use the correct zero--points, by subtracting the 25 in Equation~\ref{eqn:dao_scale} and adding in the the corresponding value in Table~\ref{tab:zero_points}.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{l c c} \hline
+Pixel Size & [3.6] & [4.5] \\ \hline \hline 
+0.6 arcsec & 18.80 & 18.31 \\
+1.2 arcsec & 17.30 & 16.81 \\
+\hline
+\end{tabular}
+\caption{Zero Points used in images with different pixel sizes.}
+\label{tab:zero_points}
+\end{center}
+\end{table}
+
+
+\section{Conversion to the standard aperture}
+\label{sec:standard_aperture}
+
+{\bf Standard aperture conversion script:} This step is performed by the aperture correction script. I provide details of the steps here for reference, but if you've run \href{https://github.com/vickyscowcroft/smhash_code/blob/master/apply_aperture_correction.py}{apply\_aperture\_correction.py} you {\bf do not} need to do this step.
+
+The IRAC standard aperture is a 10 native pixel (12") aperture with the sky measured between 12 and 20 native pixels. There is a standard conversion between the small aperture we have used and the standard aperture which is taken from the IRAC handbook.
+
+First convert your $M_{\circled{3}}$ magnitudes to fluxes:
+\begin{equation}
+Flux = 10^{(-M / 2.5)}
+\end{equation}
+\label{eqn:convert2flux}
+
+Then multiply the flux given in equation~\ref{eqn:convert2flux} by 1.128 (channel 1) or 1.127 (channel 2). Convert this result back to magnitudes using equation~\ref{eqn:convert2mags}
+\begin{equation}
+M_{\circled{4}} = -2.5 \log (Flux \times A_0)
+\end{equation}
+\label{eqn:convert2mags}
+
+At this point, your epoch 1 data is almost calibrated. 
+
+\section{Calibrate all epochs}
+\label{sec:calibrateall}
+In this step all epochs are calibrated to the same zero--point. Create a .mch file containing the epoch 1 .apc file and the .alf files for all other epochs for a {\it single channel}. Run this through daomatch and daomaster, with the following input parameters for daomaster (Assuming 12 epochs):
+\begin{itemize}
+\item Minimum number, minimum fraction, enough frames: 12,1,12
+\item Maximum sigma: 99
+\item Degrees of freedom: 4
+\end{itemize}
+
+and requesting the following output:
+\begin{itemize}
+\item Assign new star IDs? Yes
+\item A file with raw magnitudes and errors? Yes
+\item A file with the new transformations? Yes
+\item  Simply transfer star IDs? Yes
+\end{itemize}
+
+The new transformation file may not be strictly necessary as you already have a good transformations file from allframe, but I find it good practice to make an updated version.
+
+The .raw and .mtr files will be used as input to the next script, which calculates the offset between the first epoch photometry and every other one.
+
+{\bf Calibrate all epochs script:} \href{https://github.com/vickyscowcroft/smhash_code/blob/master/calculate_each_epoch_offset.py}{calculate\_each\_epoch\_offset.py}
+
+\begin{minted}[bgcolor=bg]{python}
+python calculate_each_epoch_offset.py omegaCen_1_3p6um.raw C
+\end{minted}
+
+where omegaCen\_1\_3p6um.raw would be replaced by the name of the .raw file you just created and C is the channel number (1 or 2). Don't worry that the .raw file is formatted such that the magnitudes are spread over three lines for a 12 epoch data set -- the program is designed for this. The output from this script is a .off file for each channel/epoch combination. 
+
+Here we are essentially repeating the process where you calculated the aperture correction, this time calculating the offset between epoch 1 and all the other epochs. Epoch 1 is your reference. The vast majority of the stars in your frame will not vary so you can use them as local standards. Calculate the average difference between the stars in epoch$_{N}$ and epoch 1 and apply this correction to epoch$_{N}$. Repeat for all epochs.
+
+You now have (almost) calibrated photometry for all epochs.
+
+\section{Location Correction}
+\label{sec:location}
+
+The final step is the location correction. This step MUST be performed last as it is image dependent. It is a very small effect. I also haven't found a smart way to regex the correction image names from the input photometry file names yet, so you have to run this for each image separately.
+
+{\bf Location correction script:} \href{https://github.com/vickyscowcroft/smhash_code/blob/master/location_correction.py}{location\_correction.py}
+
+\begin{minted}[bgcolor=bg]{python}
+python location_correction.py omegaCen_1__e1_3p6um_dn.off 
+                                    omegaCen_1__e1_correction_3p6um.fits 
+\end{minted}
+
+where the .off file is the output from \href{https://github.com/vickyscowcroft/smhash_code/blob/master/calculate_each_epoch_offset.py}{calculate\_each\_epoch\_offset.py} and the .fits file is the location correction image that will be in the folder with the image data. 
+
+For each magnitude in the file, the script converts it back to flux using equation~\ref{eqn:convert2flux}.
+At the position of each star, it pulls out the pixel value of that position in the correction image. Each correction image is slightly different so make sure you are using the correct one.
+
+The flux is multiplied by the correction value:
+\begin{equation}
+F_{loc-cor} = {F} \times {f_{location}}
+\end{equation}
+\label{eqn:location}
+
+then is converted back to magnitudes. This script must be run separately for all images. You now have calibrated magnitudes for all stars in all images!
+
+{\bf The output from this script is a .cal file. This is your final, calibrated photometry!}
+
+
+
+%\subsection{}
+
+
+
+\end{document}  
