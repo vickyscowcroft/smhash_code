@@ -2,7 +2,7 @@
 Python calibration scripts for SMHASH
 
 - calculate_aperture_correction.py 
--- Calculate the aperture correction for a single epoch. Requires a .raw file with large aperture photometry first, then PSF photometry
+* Calculate the aperture correction for a single epoch. Requires a .raw file with large aperture photometry first, then PSF photometry
 - apply_aperture_correction.py
 -- Run this after you've calculated the aperture correction with the previous script. Also applys the zero point correction and corrects to the Spitzer standard aperture.
 - calculate_each_epoch_offset.py
