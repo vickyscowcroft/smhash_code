@@ -15,3 +15,12 @@ See calibration_procedure.pdf for full documentation
   - Must be run last.
   - Need to run once for each image
   - Give it the phot file name and correction image name as input. 
+
+
+Other Useful scripts
+
+- remove_bad_stars.py
+  - Removes bad stars from a .als file (i.e. those with *** in the records, or the wrong number of columns)
+  - WARNING: This will overwrite the original .als file
+  - Need to update this so that it takes an optional second argument with a new filename for the output
+  
