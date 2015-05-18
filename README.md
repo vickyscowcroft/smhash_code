@@ -24,3 +24,12 @@ Other Useful scripts
   - WARNING: This will overwrite the original .als file
   - Need to update this so that it takes an optional second argument with a new filename for the output
   
+- reddening_laws.py
+  - Optical reddening laws from Cardelli, Clayton & Mathis 
+  - IR reddening laws from Indebetouw
+
+- reddening_plt_smc.py
+  - Example of fitting the reddening laws to multiwavelength Cepheid data
+  - This uses data from the SMC.
+  - You'll need to change paths, wavelengths etc to make it fit your data.
+  - email me for help
