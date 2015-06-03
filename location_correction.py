@@ -3,6 +3,7 @@
 from astropy.io import fits
 import numpy as np
 import re
+import sys
 
 ## Usage: input data file = sys.argv[1], correction image = sys.argv[2]
 
@@ -20,9 +21,9 @@ corr = []
 id, xc, yc, mag, err = np.loadtxt(photFile, usecols=(0, 1, 2, 3, 4), unpack='TRUE')
 flux = 10**(mag / -2.5)
 for star in id:
-	star = star - 1.
-	xcoord = int(floor(xc[star]) - 1.)
-	ycoord = int(floor(yc[star]) - 1.)
+	count = star - 1.
+	xcoord = int(np.floor(xc[count]) - 1.)
+	ycoord = int(np.floor(yc[count]) - 1.)
 	correction = corData[ycoord, xcoord]
 	corr.append(correction)
 	#print correction
@@ -41,7 +42,7 @@ for star in id:
 corr = np.array(corr)
 
 flux = flux * corr
-newmag = -2.5 * log10(flux)
+newmag = -2.5 * np.log10(flux)
 
 
 #newmag = np.array(newmag)

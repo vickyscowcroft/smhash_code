@@ -20,9 +20,9 @@ sdev_diff = np.std(difference[(apc > 16.5) & (apc < 20.5)])
 #sdev_diff = np.std(difference)
 
 
-total_err = sqrt(eapc**2 + ealf**2)
+total_err = np.sqrt(eapc**2 + ealf**2)
 
-axp1 = subplot(111)
+axp1 = mp.subplot(111)
 
 axp1.errorbar(apc, difference, yerr = total_err, color='k', ls='none')
 axp1.plot(apc, difference, 'k.', ls='none')

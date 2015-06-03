@@ -11,6 +11,10 @@ input = sys.argv[1]
 channel = sys.argv[2]
 
 file = open(input, "r")
+
+## This needs to be updated to take a specific list or to determine the list from the filename
+## Right now it's going to screw up if there's more than one field in the folder.
+
 if channel == '1':
 	mtrFiles = sorted(glob.glob('*_3p6um_dn.mtr'))
 if channel == '2':
@@ -129,71 +133,71 @@ sdev_diff = np.std(difference[(apc > 16.5) & (apc < 20.5)])
 
 total_err = sqrt(eapc**2 + ealf**2)
 """
-axp1 = subplot(6,2,1)
-axp2 = subplot(6,2,2)
-axp3 = subplot(6,2,3)
-axp4 = subplot(6,2,4)
-axp5 = subplot(6,2,5)
-axp6 = subplot(6,2,6)
-axp7 = subplot(6,2,7)
-axp8 = subplot(6,2,8)
-axp9 = subplot(6,2,9)
-axp10 = subplot(6,2,10)
-axp11 = subplot(6,2,11)
+axp1 = mp.subplot(6,2,1)
+axp2 = mp.subplot(6,2,2)
+axp3 = mp.subplot(6,2,3)
+axp4 = mp.subplot(6,2,4)
+axp5 = mp.subplot(6,2,5)
+axp6 = mp.subplot(6,2,6)
+axp7 = mp.subplot(6,2,7)
+axp8 = mp.subplot(6,2,8)
+axp9 = mp.subplot(6,2,9)
+axp10 = mp.subplot(6,2,10)
+axp11 = mp.subplot(6,2,11)
 
 
 difference2 = cal - alf2
-ediff2 = sqrt(ecal**2 + ealf2)
+ediff2 = np.sqrt(ecal**2 + ealf2)
 av_diff2 = np.average(difference2[(cal >10) & (cal < 16) & (alf2 < 99)])
 sdev2 = np.std(difference2[(cal >10) & (cal < 16) & (alf2 < 99)])
 
 difference3 = cal - alf3
-ediff3 = sqrt(ecal**2 + ealf3)
+ediff3 = np.sqrt(ecal**2 + ealf3)
 av_diff3 = np.average(difference3[(cal >10) & (cal < 16) & (alf3 < 99)])
 sdev3 = np.std(difference3[(cal >10) & (cal < 16) & (alf3 < 99)])
 
 difference4 = cal - alf4
-ediff4 = sqrt(ecal**2 + ealf4)
+ediff4 = np.sqrt(ecal**2 + ealf4)
 av_diff4 = np.average(difference4[(cal >10) & (cal < 16) & (alf4 < 99)])
 sdev4 = np.std(difference4[(cal >10) & (cal < 16) & (alf4 < 99)])
 
 difference5 = cal - alf5
-ediff5 = sqrt(ecal**2 + ealf5)
+ediff5 = np.sqrt(ecal**2 + ealf5)
 av_diff5 = np.average(difference5[(cal >10) & (cal < 16) & (alf5 < 99)])
 sdev5 = np.std(difference5[(cal >10) & (cal < 16) & (alf5 < 99)])
 
 difference6 = cal - alf6
-ediff6 = sqrt(ecal**2 + ealf6)
+ediff6 = np.sqrt(ecal**2 + ealf6)
 av_diff6 = np.average(difference6[(cal >10) & (cal < 16) & (alf6 < 99)])
 sdev6 = np.std(difference6[(cal >10) & (cal < 16) & (alf6 < 99)])
 
 difference7 = cal - alf7
-ediff7 = sqrt(ecal**2 + ealf7)
+ediff7 = np.sqrt(ecal**2 + ealf7)
 av_diff7 = np.average(difference7[(cal >10) & (cal < 16) & (alf7 < 99)])
 sdev7 = np.std(difference7[(cal >10) & (cal < 16) & (alf7 < 99)])
 
 difference8 = cal - alf8
-ediff8 = sqrt(ecal**2 + ealf8)
+ediff8 = np.sqrt(ecal**2 + ealf8)
 av_diff8 = np.average(difference8[(cal >10) & (cal < 16) & (alf8 < 99)])
 sdev8 = np.std(difference8[(cal >10) & (cal < 16) & (alf8 < 99)])
 
 difference9 = cal - alf9
-ediff9 = sqrt(ecal**2 + ealf9)
+ediff9 = np.sqrt(ecal**2 + ealf9)
 av_diff9 = np.average(difference9[(cal >10) & (cal < 16) & (alf9 < 99)])
 sdev9 = np.std(difference9[(cal >10) & (cal < 16) & (alf9 < 99)])
 
 difference10 = cal - alf10
-ediff10 = sqrt(ecal**2 + ealf10)
+ediff10 = np.sqrt(ecal**2 + ealf10)
 av_diff10 = np.average(difference10[(cal >10) & (cal < 16) & (alf10 < 99)])
 sdev10 = np.std(difference10[(cal >10) & (cal < 16) & (alf10 < 99)])
 
 difference11 = cal - alf11
-ediff11 = sqrt(ecal**2 + ealf11)
+ediff11 = np.sqrt(ecal**2 + ealf11)
 av_diff11 = np.average(difference11[(cal >10) & (cal < 16) & (alf11 < 99)])
 sdev11 = np.std(difference11[(cal >10) & (cal < 16) & (alf11 < 99)])
 
 difference12 = cal - alf12
-ediff12 = sqrt(ecal**2 + ealf12)
+ediff12 = np.sqrt(ecal**2 + ealf12)
 av_diff12 = np.average(difference12[(cal >10) & (cal < 16) & (alf12 < 99)])
 sdev12 = np.std(difference12[(cal >10) & (cal < 16) & (alf12 < 99)])
 
