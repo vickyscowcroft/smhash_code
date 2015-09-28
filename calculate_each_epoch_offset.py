@@ -311,7 +311,10 @@ av_diffs = [av_diff10, av_diff11, av_diff12, av_diff1, av_diff2, av_diff3, av_di
 
 count = 0
 for name in mtrFiles:
-	id, xc, yc, mag, err = np.loadtxt(name, skiprows=3, usecols=(0, 1, 2, 3, 4), unpack='TRUE')
+	if (count == 3):
+		id, xc, yc, mag, err = np.loadtxt(name, usecols=(0, 1, 2, 3, 4), unpack='TRUE')
+	else:
+		id, xc, yc, mag, err = np.loadtxt(name, skiprows=3, usecols=(0, 1, 2, 3, 4), unpack='TRUE')
 	newmag = mag + av_diffs[count]
 	output_name = re.sub('.mtr', '.off',name)
 	np.savetxt(output_name, np.column_stack((id, xc, yc, newmag, err)), fmt= "%d %.2f %.2f %.3f %.3f")
