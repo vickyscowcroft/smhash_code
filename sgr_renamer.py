@@ -20,7 +20,7 @@ new_target_stem = new_target_stem[0:7]
 
 ## Now need to sort out the epochs
 
-files = glob.glob('*_dn.fits') ## These are the new images created by the converter
+files = glob.glob('*_e*_dn.fits') ## These are the new images created by the converter
 
 no_files = len(files) / 2. ## Divide by 2 for 2 channels
 
@@ -43,6 +43,8 @@ for file in files:
 	else:
 		epoch = re.search("_e", file)
 		fits = re.search(".fits", file)
+		#print file
+		#print epoch, fits
 		#print epoch.start(), fits.end()
 		newname = new_target_stem + file[epoch.start():fits.end()]
 	#print newname
@@ -50,9 +52,4 @@ for file in files:
 
 		
 			
-
-
-	
-
-
 
