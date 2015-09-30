@@ -7,6 +7,10 @@ from astropy.stats import sigma_clip
 
 ## Updated 28/09/2015 to use sigmaclipping to remove bad points rather than relying on a hard wired magnitude range
 
+## Usage: argv[1] = input raw file
+## input[2] = sigma clipping limit
+## See smhash documentation for full details
+
 input = sys.argv[1]
 sigma = float(sys.argv[2])
 

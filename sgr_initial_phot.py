@@ -15,7 +15,7 @@ image = re.sub(".fits", "", fitsfile)
 shutil.copy("/Users/vs/Dropbox/Python/smhash_code/daophot-spitzer-i1.opt", "daophot.opt")
 shutil.copy("/Users/vs/Dropbox/Python/smhash_code/photo-spitzer.opt", "photo.opt")
 
-
+print "Working on " + image
 ## Clean up previous runs
 
 extensions = ['.coo', '.lst', '.psf', '.nei', '.ap', '.als', 's.coo', 's.ap', '.srt', '.cmb', 's.fits', '.als']
@@ -63,7 +63,8 @@ print "PHOT complete"
 ## Exit daophot
 daophot.expect("Command:")
 daophot.sendline("exit")
+daophot.close(force=True)
 
 print "Initial daophot run complete."
-print "Please make psf by hand for this epoch."
+
 
