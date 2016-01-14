@@ -117,7 +117,7 @@ def calibrate(input):
 	if ((num_frames % 6 ) == 0):
 		n_lines_raw = int((num_frames / 6) + 1)
 	else:
-		n_lines_raw = int((np.ceil(num_frames) / 6) + 1)
+		n_lines_raw = int(np.ceil(num_frames) / 6 + 1)
 	print n_lines_raw
 
 

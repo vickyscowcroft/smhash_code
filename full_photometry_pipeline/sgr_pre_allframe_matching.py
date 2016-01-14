@@ -15,7 +15,7 @@ def sgr_pre_allframe_matching(target, channel):
 		chan_regex = re.compile('3p6um')
 		chan = '3p6um'
 	if(channel =='2'):
-		chan_regex = re.compile('4.5um')
+		chan_regex = re.compile('4p5um')
 		chan = '4p5um'
 
 	file_list = glob.glob('*_e*.ap*')

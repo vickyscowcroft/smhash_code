@@ -12,7 +12,7 @@ import aplpy
 ## input[2] = sigma clipping limit
 ## See smhash documentation for full details
 
-def calc_apcor(flux_image, input, sigma, target_name):
+def calc_apcor(flux_image, input, sigma, target, cat_name):
 
 	xc, yc, apc, eapc, alf, ealf = np.loadtxt(input, skiprows=3, usecols=(1, 2, 3, 4, 5, 6), unpack='TRUE')
 
@@ -20,18 +20,22 @@ def calc_apcor(flux_image, input, sigma, target_name):
 
 	fig = mp.figure(figsize=(10,10))
 
-	target = target_name[0:11] + '.' + target_name[12:20]
+	#target = target_name[0:11] + '.' + target_name[12:20]
 	print target
 	
 	image_stem = flux_image[0:7]
 	fitsfile = flux_image + '.fits'
-	with open('/Users/vs/Dropbox/SMHASH/catalina_sagittarius_rrlyrae_catalogue', 'r') as searchfile:
+	with open(cat_name, 'r') as searchfile:
 		for line in searchfile:
 			if target in line:
 				data = line.split()
 				ra = float(data[1])
 				dec = float(data[2])
-				period = float(data[4])
+				if(cat_name=='/Users/vs/Dropbox/SMHASH/orphan_rrlyrae_catalogue'):
+					period = float(data[9])
+				if(cat_name=='/Users/vs/Dropbox/SMHASH/catalina_sagittarius_rrlyrae_catalogue'):
+					period = float(data[4])
+
 
 	print ra, dec
 

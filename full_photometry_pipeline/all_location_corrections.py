@@ -12,7 +12,7 @@ import pexpect
 
 def location_corr(input):
 
-	stem = input[0:7]
+	stem = re.sub(".mch", "", input)
 	mch_file = open(input, "r")
 	offs = glob.glob('*_e*_dn.off')
 	num_frames = len(offs)
@@ -30,11 +30,14 @@ def location_corr(input):
 	for image in np.arange(0, num_files):
 		off_file = re.sub(".alf", ".off", names[image])
 		epoch_s = re.search("_e", off_file)
-		chan = off_file[-12:-7]
+		#chan = off_file[-12:-7]
+		chan_s = re.search("_.p.um", off_file)
 		epoch = off_file[epoch_s.start():-12]
+		chan = off_file[chan_s.start():-7]
+		new_stem = re.sub(chan, "", stem)
 	
 #		corImage = str(glob.glob("*" + stem + "*" + epoch + "correction_" + chan +".fits")[0])
-		corImage = stem  + epoch +'correction_' + chan + '.fits'
+		corImage = new_stem  + epoch +'correction' + chan + '.fits'
 		#corImage = re.sub("\'", "", corImage)
 		#corImage
 		print corImage

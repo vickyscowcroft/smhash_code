@@ -13,14 +13,21 @@ from  convert_spitzer_flux_to_dn  import *
 
 def sgr_setup(target_name):
 
-	new_target_stem = re.sub("CSS_","", target_name)
+## only want to do this for sgr targets - skip for orphan etc
+##TO DO - fix for orphan
 
-	new_target_stem = new_target_stem[0:7]
-	
+    css = re.search('css', target_name)
+    if (css != None):
+        new_target_stem = re.sub("CSS_","", target_name)
+        new_target_stem = new_target_stem[0:7]
+    else:
+        new_target_stem = target_name
 	## Clean up old versions
-	old_files = glob.glob(new_target_stem + '*')
+	old_files = [ '.alf', '.apc', '.als', '.coo', '.ap', '.raw', '.nmg', '.tfr', '.mch', '.mtr', '.off']
 	for ofn in old_files:
-		os.remove(ofn)
+		olds = glob.glob('*' + ofn)
+		for files in olds:
+			os.remove(files)
 		
 
 ## Target stem is correct
@@ -31,7 +38,7 @@ def sgr_setup(target_name):
 ## Otherwise the extra epochs fuck up the correction stage
 
 	regex = re.compile(new_target_stem) ## creating a regex to find only the images corresponding to this target
-	files = glob.glob('CSS*_e*3p6um.fits') ## These are the original images
+	files = glob.glob('*_e*3p6um.fits') ## These are the original images
 	files = filter(regex.search, files)	
 	#print files
 
@@ -61,8 +68,10 @@ def sgr_setup(target_name):
 					new_correction_name = re.sub("_3p6um_dn.fits", "_correction_3p6um.fits", newname)
 		print filename, newname
 		spitzer_flux2dn(filename, newname)
-		print "copying the correction file"
-		shutil.copy(corr_file, new_correction_name)
+
+        if(corr_file != new_correction_name):
+            print "copying the correction file"
+            shutil.copy(corr_file, new_correction_name)
 			
 
 	
