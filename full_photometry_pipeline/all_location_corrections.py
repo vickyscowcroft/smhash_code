@@ -135,5 +135,32 @@ def location_corr(input):
 	print new_cal
 	shutil.move( str(new_cal[0]),cal_file)
 
+def single_location_correction(input):
+	input_stem = input[:-10]
+	chan = input[-10:-7]
+	corImage = input_stem + 'correction' + chan + '.fits'
+	corFits = fits.open(corImage, mode="readonly")
+	corData = corFits[0].data
+
+	newmag = []
+	corr = []
+
+	id, xc, yc, mag, err = np.loadtxt(off_file, usecols=(0, 1, 2, 3, 4), unpack='TRUE')
+	flux = 10**(mag / -2.5)
+	for star in id:
+		count = star - 1.
+		xcoord = int(np.floor(xc[count]) - 1.)
+		ycoord = int(np.floor(yc[count]) - 1.)
+		correction = corData[ycoord, xcoord]
+		corr.append(correction)
+	ext = input[-4:]
+	corr = np.array(corr)
+
+	flux = flux * corr
+	newmag = -2.5 * np.log10(flux)
+
+
+	output_name = re.sub(ext, '.cal',input)
+	np.savetxt(output_name, np.column_stack((id[np.isnan(corr) == False], xc[np.isnan(corr) == False], yc[np.isnan(corr) == False], newmag[np.isnan(corr) == False], err[np.isnan(corr) == False], corr[np.isnan(corr) == False])), fmt= "%d %.2f %.2f %.3f %.3f %.3f")
 
 

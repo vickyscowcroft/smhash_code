@@ -92,3 +92,18 @@ def sgr_setup(target_name):
 		
 	return(new_target_stem)
 
+def setup_single_file(target_name):
+
+	regex = re.compile(target_name) ## creating a regex to find only the images corresponding to this target
+	files = glob.glob('*3p6um.fits')
+	files = filter(regex.search, files)	
+	for filename in files:
+		corr = re.search('correction', filename)
+		if (corr != None):
+			continue
+		if (corr == None):
+			new_name = re.sub('3p6um.fits', '3p6um_dn.fits', filename)
+			mapname = re.sub('3p6um.fits', '3p6um_exposure.fits', filename)
+			flux_to_dn_expmap(filename, mapname, new_name)
+	new_target_stem = target_name
+	return(new_target_stem)
