@@ -92,3 +92,4 @@ def calc_apcor(flux_image, input, sigma, target, cat_name):
 	mp.show()
 
 	return(av_diff, sdev_diff, period)
+	

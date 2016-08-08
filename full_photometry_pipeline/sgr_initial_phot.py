@@ -9,12 +9,16 @@ import shutil
 from astropy.io import fits
 import os
 
-def init_aper_phot(fitsfile):
+def init_aper_phot(fitsfile, channel):
 
 	image = re.sub(".fits", "", fitsfile)
 
 ## Copy the daophot opt file
-	shutil.copy("/Users/vs/Dropbox/Python/smhash_code/daophot-spitzer-i1.opt", "daophot.opt")
+	if (channel == 1):
+		shutil.copy("/Users/vs/Dropbox/Python/smhash_code/daophot-spitzer-i1.opt", "daophot.opt")
+	if (channel == 2):
+		shutil.copy("/Users/vs/Dropbox/Python/smhash_code/daophot-spitzer-i2.opt", "daophot.opt")
+
 	shutil.copy("/Users/vs/Dropbox/Python/smhash_code/photo-spitzer.opt", "photo.opt")
 
 	print "Working on " + image
@@ -31,7 +35,8 @@ def init_aper_phot(fitsfile):
 
 	hdulist = fits.open(fitsfile)
 	prihdr = hdulist[0].header
-	n_bcds = prihdr['totalbcd'] ### Getting the correct number of BCDs that went into the stack
+	n_bcds = np.round(prihdr['medcov']) ### Changing this from the total number of BCDs to the median coverage - the coverage can be really non uniform so using the total number of BCDs in the stack is pretty useless.
+	#n_bcds = prihdr['totalbcd'] ### Getting the correct number of BCDs that went into the stack
 	#if (n_bcds > 20): #### Changing the threshold for the long exposure frames. Change it to do this a smarter way eventually
 	#	daophot.expect("Command:")
 	#	daophot.sendline("opt")

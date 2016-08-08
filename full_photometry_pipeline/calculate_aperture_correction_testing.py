@@ -12,40 +12,28 @@ import aplpy
 ## input[2] = sigma clipping limit
 ## See smhash documentation for full details
 
-flux_image = sys.argv[1]
-input = sys.argv[2]
-sigma = float(sys.argv[3])
-xc, yc, apc, eapc, alf, ealf = np.loadtxt(input, skiprows=3, usecols=(1, 2, 3, 4, 5, 6), unpack='TRUE')
+def calc_apcor(flux_image, input, sigma, target):
 
-mp.close()
+	xc, yc, apc, eapc, alf, ealf = np.loadtxt(input, skiprows=3, usecols=(1, 2, 3, 4, 5, 6), unpack='TRUE')
 
-fig = mp.figure(figsize=(10,10))
+	mp.close()
 
+	fig = mp.figure(figsize=(10,10))
 
-image_stem = flux_image[0:7]
+	#target = target_name[0:11] + '.' + target_name[12:20]
+	print target
+	
+	image_stem = flux_image[0:7]
+	fitsfile = flux_image + '.fits'
+		
+	## Cutting the difference arrays so they only include stars in the good image region:
+	#difference  = apc - alf
 
-fitsfile = flux_image + '.fits'
-with open('/Users/vs/Dropbox/SMHASH/catalina_sagittarius_rrlyrae_catalogue', 'r') as searchfile:
-	for line in searchfile:
-		if image_stem in line:
-			data = line.split()
-			ra = float(data[1])
-			dec = float(data[2])
-			period = float(data[4])
-
-
-fig = aplpy.FITSFigure(fitsfile)
-rr_x, rr_y = fig.world2pixel(ra, dec)
-print rr_x, rr_y
-
-## Cutting the difference arrays so they only include stars in the good image region:
-#difference  = apc - alf
-
-apc2 = apc[(xc > (rr_x - 256.)) & (xc < rr_x + 256.) & (yc > (rr_y - 256.)) & (yc < (rr_y + 256.))]#  & (ealf < 0.1)]
-alf2 = alf[(xc > (rr_x - 256.)) & (xc < rr_x + 256.) & (yc > (rr_y - 256.)) & (yc < (rr_y + 256.))]#  & (ealf < 0.1)]
-ealf2 = ealf[(xc > (rr_x - 256.)) & (xc < rr_x + 256.) & (yc > (rr_y - 256.)) & (yc < (rr_y + 256.))]#  & (ealf < 0.1)]
-eapc2 = eapc[(xc > (rr_x - 256.)) & (xc < rr_x + 256.) & (yc > (rr_y - 256.)) & (yc < (rr_y + 256.))]# & (ealf < 0.1)]
-difference = apc2 - alf2
+	apc2 = apc[(ealf < 0.1)]
+	alf2 = alf[(ealf < 0.1)]
+	ealf2 = ealf[(ealf < 0.1)]
+	eapc2 = eapc[(ealf < 0.1)]
+	difference = apc2 - alf2
 
 #av_diff = np.average(difference)
 #sdev_diff = np.std(difference)
@@ -53,19 +41,19 @@ difference = apc2 - alf2
 ## Using astropy.stats.sigma_clip
 ## This version returns a masked array rather than a cut array
 
-alf_sorted = np.argsort(alf2)
-brightest = alf_sorted[0:50]
-print brightest
+	alf_sorted = np.argsort(alf2)
+	brightest = alf_sorted[0:50]
+	print brightest
 
-clipped2 = sigma_clip(difference[brightest], sig=sigma, iters=5)
+	clipped2 = sigma_clip(difference[brightest], sig=sigma, iters=5)
 
-av_diff = np.ma.mean(clipped2)
-sdev_diff = np.ma.std(clipped2)
+	av_diff = np.ma.mean(clipped2)
+	sdev_diff = np.ma.std(clipped2)
 
 
-total_err = np.sqrt(eapc2**2 + ealf2**2)
+	total_err = np.sqrt(eapc2**2 + ealf2**2)
 
-axp1 = mp.subplot(211)
+	axp1 = mp.subplot(211)
 
 #axp1.errorbar(apc, difference, yerr = total_err, color='grey', ls='none')
 #axp1.plot(apc, difference, 'k.', ls='none')
@@ -73,17 +61,18 @@ axp1 = mp.subplot(211)
 
 
 
-axp1.errorbar(alf2[brightest], clipped2, yerr = total_err[brightest], color='grey', ls='none')
-axp1.plot(alf2[brightest], clipped2, 'k.', ls='none')
-axp1.axhline(av_diff, color='r', ls='--')
-axp1.axhline(av_diff+2*sdev_diff, color='b', ls='--')
-axp1.axhline(av_diff-2*sdev_diff, color='b', ls='--')
+	axp1.errorbar(alf2[brightest], clipped2, yerr = total_err[brightest], color='grey', ls='none')
+	axp1.plot(alf2[brightest], clipped2, 'k.', ls='none')
+	axp1.axhline(av_diff, color='r', ls='--')
+	axp1.axhline(av_diff+2*sdev_diff, color='b', ls='--')
+	axp1.axhline(av_diff-2*sdev_diff, color='b', ls='--')
 
-axp2 = mp.subplot(212)
+	axp2 = mp.subplot(212)
 
-axp2.plot(alf2, apc2, 'k.', ls='None')
-axp2.plot(alf2[brightest], apc2[brightest], 'r.', ls='None')
+	axp2.plot(alf2, apc2, 'k.', ls='None')
+	axp2.plot(alf2[brightest], apc2[brightest], 'r.', ls='None')
 
-mp.show()
+	mp.show()
 
-print av_diff, sdev_diff, period
+	return(av_diff, sdev_diff)
+	

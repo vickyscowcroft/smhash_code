@@ -6,13 +6,14 @@ import sys
 import glob
 import shutil
 import os
+import errno
 from astropy.io import fits
 from  convert_spitzer_flux_to_dn  import *
 
 ## Target name  = sys.argv[1]
 ## This would be the long CSS_J name without any epoch specification
 
-def sgr_setup(target_name):
+def sgr_setup(target_name, channel):
 
 ## only want to do this for sgr targets - skip for orphan etc
 ##TO DO - fix for orphan
@@ -39,7 +40,7 @@ def sgr_setup(target_name):
 ## Otherwise the extra epochs fuck up the correction stage
 
 	regex = re.compile(new_target_stem) ## creating a regex to find only the images corresponding to this target
-	files = glob.glob('*_e*3p6um.fits') ## These are the original images
+	files = glob.glob('*_e*' + channel + '.fits') ## These are the original images
 	files = filter(regex.search, files)	
 	#print files
 
@@ -50,14 +51,16 @@ def sgr_setup(target_name):
 	## Just change file names of correction images
 		corr = re.search('correction', filename)
 		if (corr != None):
+			new_corr_name = re.sub('__e', '_e', filename)
+			shutil.move(filename, new_corr_name)
 			continue
 		if (corr == None):
 			extra = re.search('xc', filename)
 			if (extra != None):
 				ch1 += 1
-				newname = new_target_stem + "_e" + str(ch1) + "_3p6um_dn.fits"
-				corr_file = re.sub("_3p6um", "_correction_3p6um", filename)
-				new_correction_name = new_target_stem + "_e" + str(ch1) + "_correction_3p6um.fits"
+				newname = new_target_stem + "_e" + str(ch1) + "_" + channel + "_dn.fits"
+				corr_file = re.sub("_" + channel, "_correction_" + channel, filename)
+				new_correction_name = new_target_stem + "_e" + str(ch1) + "_correction_" + channel + ".fits"
 			else:
 				epoch = re.search("_e", filename)
 				fit = re.search(".fits", filename)
@@ -65,23 +68,22 @@ def sgr_setup(target_name):
 				if (is1 != None):
 					newname = new_target_stem + filename[epoch.start():fit.start()] + "_dn.fits" 
 					corr_file = re.sub("_3p6um", "_correction_3p6um", filename)
-
 					new_correction_name = re.sub("_3p6um_dn.fits", "_correction_3p6um.fits", newname)
-		print filename, newname
-		spitzer_flux2dn(filename, newname)
+				if (is1 == None):
+					newname = new_target_stem + filename[epoch.start():fit.start()] + "_dn.fits" 
+					corr_file = re.sub("_4p5um", "_correction_4p5um", filename)
+					new_correction_name = re.sub("_4p5um_dn.fits", "_correction_4p5um.fits", newname)
 
-        if(corr_file != new_correction_name):
-            print "copying the correction file"
-            shutil.copy(corr_file, new_correction_name)
-			
+			print filename, newname
+			spitzer_flux2dn(filename, newname)	
 
 	
 ## Now also convert the mosaic
 ## target_name is the target without epoch specification. Can use that
 ## Want to copy the median and the science stack
 
-#	channel_list = ['3p6um', '4p5um']
-	channel_list = ['3p6um']
+	channel_list = ['3p6um', '4p5um']
+#	channel_list = ['3p6um']
 	for channel in channel_list:
 		image_name = target_name + "_" + channel + '.fits'
 		median_name = target_name + "_" + channel + '_median.fits'
@@ -96,15 +98,19 @@ def sgr_setup(target_name):
 def setup_single_file(target_name):
 
 	regex = re.compile(target_name) ## creating a regex to find only the images corresponding to this target
-	files = glob.glob('*3p6um.fits')
+	files = glob.glob('*' + channel + '.fits')
 	files = filter(regex.search, files)	
 	for filename in files:
 		corr = re.search('correction', filename)
 		if (corr != None):
 			continue
 		if (corr == None):
-			new_name = re.sub('3p6um.fits', '3p6um_dn.fits', filename)
-			mapname = re.sub('3p6um.fits', '3p6um_exposure.fits', filename)
+			if (channel == '3p6um'):
+				new_name = re.sub('3p6um.fits', '3p6um_dn.fits', filename)
+				mapname = re.sub('3p6um.fits', '3p6um_exposure.fits', filename)
+			if (channel == '4p5um'):
+				new_name = re.sub('4p5um.fits', '4p5um_dn.fits', filename)
+				mapname = re.sub('4p5um.fits', '4p5um_exposure.fits', filename)
 			flux_to_dn_expmap(filename, mapname, new_name)
 	new_target_stem = target_name
 	return(new_target_stem)
@@ -120,6 +126,51 @@ def bad_pixel_mask(file_list): ### Creating bad pixel masks for all the science 
 		mask[mask<=0] = 0
 		hdu_list.flush()
 		hdu_list.close()
+		
+def setup_dir_structure(target_name, channel):
+	if (channel == 1 or channel == '3p6um' or channel == '1'): channel = '3p6um'
+	elif (channel == 2 or channel == '4p5um' or channel == '2'): channel = '4p5um'
+	else: 
+		print 'invalid channel'
+		exit(1)
+	curr_dir = os.getcwd().split('/')[-1]
+	new_dir = target_name + '_' + channel
+	is_there = os.path.exists(new_dir)
+	if (curr_dir != new_dir):
+		if (is_there == False):
+			os.mkdir(new_dir)
+		os.chdir(new_dir)
+	
+	regex = re.compile(target_name)
+
+	file_list = glob.glob('../*/*.fits')
+	file_list = filter(regex.search, file_list)
+	print file_list
+	epoch_link_list = [x.split('/', 2)[2] for x in file_list]
+	mosaic_list = glob.glob('../MegaMosaics/*/*.fits')
+	mosaic_list = filter(regex.search, mosaic_list)
+	mosaic_link_list = [x.split('/', 3)[3] for x in mosaic_list]
+	for count in range(len(file_list)):
+		#print file_list[count], epoch_link_list[count]
+		try:
+			os.symlink(file_list[count], epoch_link_list[count])
+		except OSError, e:
+			if e.errno == errno.EEXIST:
+				os.remove(epoch_link_list[count])
+				os.symlink(file_list[count], epoch_link_list[count])
+	for count in range(len(mosaic_list)):
+		#print mosaic_list[count], mosaic_link_list[count]
+		try:
+			os.symlink(mosaic_list[count], mosaic_link_list[count])
+		except OSError, e:
+			if e.errno == errno.EEXIST:
+				os.remove(mosaic_link_list[count])
+				os.symlink(mosaic_list[count], mosaic_link_list[count])	
+	print 'Directory structure set up'	
+	return(channel)
+		
+	
+		
 		
 		
 		

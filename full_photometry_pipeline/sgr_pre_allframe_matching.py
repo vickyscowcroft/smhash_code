@@ -11,10 +11,10 @@ import subprocess
 def sgr_pre_allframe_matching(target, channel):
 
 	targ_regex = re.compile(target)
-	if (channel == '1'):
+	if (str(channel) == '1'):
 		chan_regex = re.compile('3p6um')
 		chan = '3p6um'
-	if(channel =='2'):
+	if(str(channel) =='2'):
 		chan_regex = re.compile('4p5um')
 		chan = '4p5um'
 
