@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+### Last edit August 19 2016
+### Calibration procedure is changed significantly!! 
+### SEE VS BEFORE YOU RUN THIS!!
 
 import sys
 import glob
@@ -119,7 +122,7 @@ apply_aperture_correction.apply_apcor(target_stem + '_e1_' + new_chan + '_dn.alf
 calibrate_all_epochs.calibrate(target_stem + '_' + new_chan + '.mch')
 
 ## location correction
-all_location_corrections.location_corr(target_stem + '_' + new_chan + '.mch')
+all_location_corrections.location_corr(target_stem, new_chan)
 
 print "Calibration complete"
 

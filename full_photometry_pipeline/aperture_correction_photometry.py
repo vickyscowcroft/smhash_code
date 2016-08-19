@@ -18,6 +18,15 @@ def apcor_photo(image):
 
 ## Do the aperture photometry on the flux image in the standard aperture
 
+## Clean up old runs
+
+	if os.path.isfile(image + '.psf'): os.remove(image + '.psf')
+	if os.path.isfile(image + '.ap'): os.remove(image + '.ap')
+	if os.path.isfile(image + '.als'): os.remove(image + '.als')
+	if os.path.isfile(image + 's.fits'): os.remove(image + 's.fits')
+	if os.path.isfile(image + '.nei'): os.remove(image + '.nei')
+
+
 
 	if(os.path.isfile("apcor_photo.opt")): os.remove("apcor_photo.opt")
 	shutil.copy("/Users/vs/Dropbox/Python/smhash_code/apcor_photo.opt", "apcor_photo.opt")
@@ -136,9 +145,7 @@ def apcor_photo(image):
 	daophot.sendline(image + '_alf.alf')
 	daophot.expect("Output file")
 	daophot.sendline(image + '.ap')
-	
-	if os.path.isfile(image + '.psf'): os.remove(image + '.psf')
-	
+		
 	daophot.expect("Command:")
 	daophot.sendline("psf")
 	daophot.expect("File with aperture results")

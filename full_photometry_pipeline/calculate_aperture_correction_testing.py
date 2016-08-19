@@ -23,7 +23,7 @@ def calc_apcor(flux_image, input, sigma, target):
 	#target = target_name[0:11] + '.' + target_name[12:20]
 	print target
 	
-	image_stem = flux_image[0:7]
+	#image_stem = flux_image[0:7]
 	fitsfile = flux_image + '.fits'
 		
 	## Cutting the difference arrays so they only include stars in the good image region:
@@ -45,7 +45,7 @@ def calc_apcor(flux_image, input, sigma, target):
 	brightest = alf_sorted[0:50]
 	print brightest
 
-	clipped2 = sigma_clip(difference[brightest], sig=sigma, iters=5)
+	clipped2 = sigma_clip(difference[brightest], sigma=sigma, iters=5)
 
 	av_diff = np.ma.mean(clipped2)
 	sdev_diff = np.ma.std(clipped2)
@@ -66,13 +66,17 @@ def calc_apcor(flux_image, input, sigma, target):
 	axp1.axhline(av_diff, color='r', ls='--')
 	axp1.axhline(av_diff+2*sdev_diff, color='b', ls='--')
 	axp1.axhline(av_diff-2*sdev_diff, color='b', ls='--')
+	mp.title(target + ': av_diff = ' + str(av_diff) + ' sdev_diff = ' + str(sdev_diff))
 
 	axp2 = mp.subplot(212)
 
+	axp2.plot(alf, apc, 'ro', ls='none')
 	axp2.plot(alf2, apc2, 'k.', ls='None')
 	axp2.plot(alf2[brightest], apc2[brightest], 'r.', ls='None')
 
 	mp.show()
+	
+	mp.savefig(target + '.pdf')
 
 	return(av_diff, sdev_diff)
 	

@@ -7,7 +7,7 @@ def apply_apcor(input, apcor, channel):
 
 	stripped = input[:-4]
 
-	print channel
+	print 'Channel = ' + str(channel)
 
 	id, xc, yc, mag, err = np.loadtxt(input, skiprows=3, usecols=(0, 1, 2, 3, 4 ), unpack='TRUE')
 
@@ -41,9 +41,10 @@ def apply_apcor(input, apcor, channel):
 
 ## Save output to file. Still needs to be corrected for location at this point.
 
-	output = stripped + '.apc'
+	output = stripped + '.apcor'
 
 	np.savetxt(output, np.column_stack((id, xc, yc, apc, err)), fmt= "%d %.2f %.2f %.3f %.3f")
 
+	return(0)
 
 

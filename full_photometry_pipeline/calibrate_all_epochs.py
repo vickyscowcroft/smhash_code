@@ -13,26 +13,36 @@ from astropy.stats import sigma_clip
 
 def calibrate(input):
 
-	## Replacing the old extensions with the alf extensions
-	f1 = open(input, 'r')
-	f2 = open('temp', 'w')
-	for line in f1:
-	    f2.write(line.replace('.als', '.alf'))
-	f1.close()
-	f2.close()
 
-	f1 = open('temp', 'r')
-	f2 = open(input, 'w')
-	for line in f1:
-	    f2.write(line.replace('.ap', '.alf'))
-	f1.close()
-	f2.close()
 
-	os.remove('temp')
+## Grab the input mch file
+## First line should be the calibrated epoch 1 data
+## Rest should be the alf files
+## First file should have the .apc extension
+## All others should have .alf
 
+	input_mch = input
+	output_mch = re.sub('.mch', '_cal.mch', input)
+	output = open(output_mch, 'w')
+	
+	for line in open(input_mch, 'r'):
+		is_epoch1 = re.search('_e1_', line)
+		if (is_epoch1 != None):
+			splitline = line.split()
+			name = splitline[0]
+			new_name = name.split(".")[0]+ '.apcor'
+			output.write( "{0:s} ' {1:10s} {2:10s} {3:10s} {4:10s} {5:10s} {6:10s} {7:10s} {8:10s} \n".format(new_name, splitline[2], splitline[3], splitline[4], splitline[5], splitline[6], splitline[7], splitline[8], splitline[9]))
+		else:
+			splitline = line.split()
+			name = splitline[0]
+			new_name = name.split(".")[0] + '.alf'
+			output.write( "{0:s} ' {1:10s} {2:10s} {3:10s} {4:10s} {5:10s} {6:10s} {7:10s} {8:10s} \n".format(new_name, splitline[2], splitline[3], splitline[4], splitline[5], splitline[6], splitline[7], splitline[8], splitline[9]))
+		
+	output.close()
+	
 	file_list = glob.glob('*.alf')
 
-	target = re.sub(".mch","", input)
+	target = re.sub(".mch","", output_mch)
 	if (os.path.isfile(target + '.raw')): os.remove(target + '.raw')
 	print "running daomaster"
 	num_frames = len(file_list)
@@ -40,7 +50,7 @@ def calibrate(input):
 
 	daomaster = pexpect.spawn("daomaster")
 	daomaster.expect("File with list of input files")
-	daomaster.sendline(input)
+	daomaster.sendline(output_mch)
 	daomaster.expect("Minimum number, minimum fraction, enough frames")
 	daomaster.sendline(str(num_frames) + ", 1, " + str(num_frames))
 	print str(num_frames) + ", 1, " + str(num_frames)
@@ -77,7 +87,7 @@ def calibrate(input):
 	daomaster.sendline("y")
 	print "asked about transformations"
 	daomaster.expect("Output file name")
-	daomaster.sendline(input + "_new")
+	daomaster.sendline(output_mch + "_new")
 	print "asked about output file"
 	daomaster.expect("A file with the transfer table")
 	daomaster.sendline("n")
@@ -103,7 +113,7 @@ def calibrate(input):
 ## Fixing the bad output file name
 	new_mch  = glob.glob('*.mch_new*')
 	print new_mch
-	shutil.move( str(new_mch[0]), input)
+	shutil.move( str(new_mch[0]), output_mch)
 
 	new_raw = glob.glob(target +'.raw*')
 	print new_raw
@@ -156,10 +166,10 @@ def calibrate(input):
 	sdev_offsets = np.zeros(num_frames)
 
 		 
-	for epoch in np.arange(2, (num_frames*2), 2): ## starting from 1 because don't match epoch 1 to itself
+	for epoch in np.arange(2, (num_frames*2), 2, dtype=np.int): ## starting from 1 because don't match epoch 1 to itself
 		difference = epoch1 - objects[ : , epoch + 3]
 		ediff = np.sqrt(epoch1_err**2 + objects[ : , epoch + 4]**2)
-		clipped = sigma_clip(difference, sig = 4., iters=100)
+		clipped = sigma_clip(difference, sigma = 4., iters=100)
 
 		av_diff = np.ma.mean(clipped)
 		sdev_diff = np.ma.std(clipped)
@@ -175,38 +185,62 @@ def calibrate(input):
 		axp1.axhline(av_diff, color='r', ls='--')
 		axp1.axhline(av_diff+2*sdev_diff, color='b', ls='--')
 		axp1.axhline(av_diff-2*sdev_diff, color='b', ls='--')
-	
+		mp.title("Epoch " + str((epoch/2.)+1) + " offset " +str(av_diff) + " sdev " + str(sdev_diff))
+		
 		mp.show()
-
+		mp.savefig(target  + str(int((epoch/2.)+1)) + '.pdf')
 ## Read the file names from the mch file to make sure the order matches up with the order in the raw file
 
 	names = []
-	mch_file = open(target + '.mch', 'r')
-	for count in np.arange(0, num_frames):
-		line = mch_file.readline()
-		lines = line.split("\'")[1]
-		names.append(lines)
+	for line in open(output_mch, 'r'):
+		splitline = line.split()
+		is_epoch1 = re.search('_e1_', splitline[0])
+		## Do not apply an offset for epoch 1 
+		## So don't append it to the list of files to work on
+		if (is_epoch1==None):
+			names.append(splitline[0].split("\'")[1])
 		
 	epoch_count = 0
 	for count in np.arange(0, len(names)):
-		
-		names[count] = re.sub(" ", "", names[count])
 		mtr_name = re.sub(".alf", ".mtr", str(names[count]))
 		off_name = re.sub(".alf", ".off", str(names[count]))
 		
-		input = open(mtr_name, "r")
-		output = open(off_name, "w")
+		input_mtr = open(mtr_name, "r")
+		output_mtr = open(off_name, "w")
 		for count in np.arange(0,3): 
-			header = 	input.readline()
-			output.write(header)
-		input.close()
-		output.close()
+			header = input_mtr.readline()
+			output_mtr.write(header)
+		input_mtr.close()
+		output_mtr.close()
+		print mtr_name, off_name
 		id, xc, yc, mag, err = np.loadtxt(mtr_name, skiprows=3, usecols=(0, 1, 2, 3, 4), unpack='TRUE')
 		newmag = mag + offsets[epoch_count]
-		np.savetxt(off_name, np.column_stack((id, xc, yc, newmag, err)), fmt= "%d %.2f %.2f %.3f %.3f")
+		np.savetxt(off_name, np.column_stack((id, xc, yc, newmag, err)), fmt= "%d %.2f %.2f %.3f %.3f")				
+		print count, names[count], off_name
 		epoch_count = epoch_count + 1
 	
 	print "Finished offset calibration"
+	
+	### Now write an updated mch file with the correct file names
+	
+	final_mch = open('tempmch', 'w')
+	
+	for line in open(output_mch, 'r'):
+		is_epoch1 = re.search('_e1_', line)
+		if (is_epoch1 != None):
+			final_mch.write( "{0:s}".format(line))
+		else:
+			splitline = line.split()
+			name = splitline[0]
+			new_name = name.split(".")[0] + '.off'
+			final_mch.write( " {0:s} ' {1:10s} {2:10s} {3:10s} {4:10s} {5:10s} {6:10s} {7:10s} {8:10s} \n".format(new_name, splitline[2], splitline[3], splitline[4], splitline[5], splitline[6], splitline[7], splitline[8], splitline[9]))
+		
+	final_mch.close()
+	
+	shutil.move('tempmch', output_mch)
+	
+	return(0)
+
 
 
 

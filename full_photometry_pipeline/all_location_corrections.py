@@ -10,36 +10,26 @@ import pexpect
 
 ## Usage: input mch = sys.argv[1]
 
-def location_corr(input):
+def location_corr(target_stem, new_chan):
 
-	stem = re.sub(".mch", "", input)
-	mch_file = open(input, "r")
-	offs = glob.glob('*_e*_dn.off')
-	num_frames = len(offs)
+	input = target_stem + '_' + new_chan + '_cal.mch'
 	names = []
-	for count in np.arange(0, num_frames):
-		line = mch_file.readline()
-		lines = line.split("\'")[1]
-		lines = re.sub(" ", "",lines)
-		names.append(lines)
-		print lines
 
-## names currently contains a list of .alf files
+	for line in open(input, 'r'):
+		splitline = line.split()
+		names.append(splitline[0].split("\'")[1])
 
+		
+	### names contains the list of the calibrated photometry files, before location correction
+	
+	## construct the correction file names 
+	## format is TARGET + EPOCH + correction + CHANNEL.FITS
 	num_files = len(names)
 	for image in np.arange(0, num_files):
-		off_file = re.sub(".alf", ".off", names[image])
-		epoch_s = re.search("_e", off_file)
-		#chan = off_file[-12:-7]
-		chan_s = re.search("_.p.um", off_file)
-		epoch = off_file[epoch_s.start():-12]
-		chan = off_file[chan_s.start():-7]
-		new_stem = re.sub(chan, "", stem)
+		epoch = re.search('_e([0-9]|[0-9][0-9])_', names[image]).group(0)
 	
 #		corImage = str(glob.glob("*" + stem + "*" + epoch + "correction_" + chan +".fits")[0])
-		corImage = new_stem  + epoch +'correction' + chan + '.fits'
-		#corImage = re.sub("\'", "", corImage)
-		#corImage
+		corImage = target_stem  + epoch + 'correction_' + new_chan + '.fits'
 		print corImage
 		corFits = fits.open(corImage, mode="readonly")
 		corData = corFits[0].data
@@ -47,12 +37,11 @@ def location_corr(input):
 		newmag = []
 		corr = []
 
-		id, xc, yc, mag, err = np.loadtxt(off_file, usecols=(0, 1, 2, 3, 4), unpack='TRUE')
+		id, xc, yc, mag, err = np.loadtxt(names[image], usecols=(0, 1, 2, 3, 4), unpack='TRUE')
 		flux = 10**(mag / -2.5)
-		for star in id:
-			count = star - 1.
-			xcoord = int(np.floor(xc[count]) - 1.)
-			ycoord = int(np.floor(yc[count]) - 1.)
+		for star in np.arange(len(id)):
+			xcoord = int(np.floor(xc[star]) - 1.)
+			ycoord = int(np.floor(yc[star]) - 1.)
 			correction = corData[ycoord, xcoord]
 			corr.append(correction)
 
@@ -61,29 +50,38 @@ def location_corr(input):
 		flux = flux * corr
 		newmag = -2.5 * np.log10(flux)
 
-
-		output_name = re.sub('.off', '.cal',off_file)
+		is_epoch1 = re.search('_e1_', names[image])
+		if (is_epoch1 != None):
+			output_name = re.sub('.apcor', '.cal',names[image])
+		else:
+			output_name = re.sub('.off', '.cal',names[image])
 		np.savetxt(output_name, np.column_stack((id[np.isnan(corr) == False], xc[np.isnan(corr) == False], yc[np.isnan(corr) == False], newmag[np.isnan(corr) == False], err[np.isnan(corr) == False], corr[np.isnan(corr) == False])), fmt= "%d %.2f %.2f %.3f %.3f %.3f")
 		
 
 ## Replacing the old extensions with the alf extensions
-	mch_file.seek(0)
-	f2 = open('temp', 'w')
-	for line in mch_file:
-	    f2.write(line.replace('.alf', '.cal'))
-	f2.close()
+	final_mch = open('tempmch', 'w')
+	
+	for line in open(input, 'r'):
+		splitline = line.split()
+		name = splitline[0]
+		new_name = name.split(".")[0] + '.cal'
+		final_mch.write( " {0:s} ' {1:10s} {2:10s} {3:10s} {4:10s} {5:10s} {6:10s} {7:10s} {8:10s} \n".format(new_name, splitline[2], splitline[3], splitline[4], splitline[5], splitline[6], splitline[7], splitline[8], splitline[9]))
+		
+	final_mch.close()
+	
+	shutil.move('tempmch', input)
 
 	mch_name = input
-	cal_file = re.sub(".mch", ".cal", mch_name)
+	cal_file = target_stem + '_' + new_chan + '.temp_cal'
+	#re.sub(".mch", ".cal", mch_name)
 
-	shutil.move("temp", mch_name)
 
 	daomaster = pexpect.spawn("daomaster")
 	daomaster.expect("File with list of input files")
 	daomaster.sendline(mch_name)
 	daomaster.expect("Minimum number, minimum fraction, enough frames")
-	daomaster.sendline(str(num_frames) + ", 1, " + str(num_frames))
-	print str(num_frames) + ", 1, " + str(num_frames)
+	daomaster.sendline(str(num_files) + ", 1, " + str(num_files))
+	print str(num_files) + ", 1, " + str(num_files)
 	daomaster.expect("Maximum sigma")
 	daomaster.sendline("99")
 	## desired degrees of freedom:
@@ -133,19 +131,26 @@ def location_corr(input):
 
 	new_cal = glob.glob(cal_file + '*')
 	print new_cal
-	shutil.move( str(new_cal[0]),cal_file)
+	shutil.move(str(new_cal[0]),cal_file)
+	
+	cal_file2 = target_stem + '_' + new_chan + '.cal'
+	shutil.move(cal_file, cal_file2)
 
-def single_location_correction(input):
-	input_stem = input[:-10]
-	chan = input[-10:-7]
-	corImage = input_stem + 'correction' + chan + '.fits'
+	
+	
+	return(0)
+
+def single_location_correction(target_stem, new_chan):
+	input = target_stem + '_' + new_chan + '_cal.mch'
+	
+	corImage = target_stem + '_correction_' + new_chan + '.fits'
 	corFits = fits.open(corImage, mode="readonly")
 	corData = corFits[0].data
 
 	newmag = []
 	corr = []
 
-	id, xc, yc, mag, err = np.loadtxt(off_file, usecols=(0, 1, 2, 3, 4), unpack='TRUE')
+	id, xc, yc, mag, err = np.loadtxt(names[image], usecols=(0, 1, 2, 3, 4), unpack='TRUE')
 	flux = 10**(mag / -2.5)
 	for star in id:
 		count = star - 1.
