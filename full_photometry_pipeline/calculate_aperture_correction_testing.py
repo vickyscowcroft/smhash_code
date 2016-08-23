@@ -18,7 +18,7 @@ def calc_apcor(flux_image, input, sigma, target):
 
 	mp.close()
 
-	fig = mp.figure(figsize=(10,10))
+	fig = mp.figure(figsize=(10,5))
 
 	#target = target_name[0:11] + '.' + target_name[12:20]
 	print target
@@ -29,11 +29,13 @@ def calc_apcor(flux_image, input, sigma, target):
 	## Cutting the difference arrays so they only include stars in the good image region:
 	#difference  = apc - alf
 
-	apc2 = apc[(ealf < 0.1)]
-	alf2 = alf[(ealf < 0.1)]
-	ealf2 = ealf[(ealf < 0.1)]
-	eapc2 = eapc[(ealf < 0.1)]
+	apc2 = apc[(ealf < 0.2)]
+	alf2 = alf[(ealf < 0.2)]
+	ealf2 = ealf[(ealf < 0.2)]
+	eapc2 = eapc[(ealf < 0.2)]
 	difference = apc2 - alf2
+	diff2 = apc - alf
+	err2 = np.sqrt(eapc**2 + ealf**2)
 
 #av_diff = np.average(difference)
 #sdev_diff = np.std(difference)
@@ -45,36 +47,52 @@ def calc_apcor(flux_image, input, sigma, target):
 	brightest = alf_sorted[0:50]
 	print brightest
 
-	clipped2 = sigma_clip(difference[brightest], sigma=sigma, iters=5)
+	clipped2 = sigma_clip(difference[brightest], sigma=sigma, iters=None)
 
 	av_diff = np.ma.mean(clipped2)
 	sdev_diff = np.ma.std(clipped2)
 
 
 	total_err = np.sqrt(eapc2**2 + ealf2**2)
+	
+	full_sample = np.zeros(len(alf))
+	#clipped_sample = np.zeros(len(clipped2))
+	
+	## fix this later for samples where clipped2 array not same length as original alf array
+	
+	full_sample[clipped2.mask] = 1 ## if full_sample == 0, then good star
+	full_sample[(ealf>0.2) | (eapc > 0.2)] = 2
+	full_sample[(diff2 - av_diff) > 0.5] = 3 ## high range
+	full_sample[(diff2 - av_diff) < -0.5] = 4 ## low range
 
-	axp1 = mp.subplot(211)
-
-#axp1.errorbar(apc, difference, yerr = total_err, color='grey', ls='none')
-#axp1.plot(apc, difference, 'k.', ls='none')
-#axp1.axhline(av_diff, color='r', ls='--')
+	axp1 = mp.subplot(111)
 
 
+	mp.ylim(av_diff - 0.5, av_diff + 0.5)
+	
+	axp1.errorbar(alf[full_sample==2], diff2[full_sample==2], yerr = err2[full_sample==2], color='r', ls='none')
+	axp1.errorbar(alf[full_sample==1], diff2[full_sample==1], yerr = err2[full_sample==1], color='b', ls='none')
+	axp1.errorbar(alf2[full_sample==0], clipped2[full_sample==0], yerr = total_err[full_sample==0], color='grey', ls='none')
+	
+	axp1.plot(alf[full_sample==2], diff2[full_sample==2], 'ro', ls='none', label='Error cut')
+	axp1.plot(alf[full_sample==1], diff2[full_sample==1], 'bo', ls='none', label='sigma clipped')
+	axp1.plot(alf2[full_sample==0], clipped2[full_sample==0], 'ko', ls='none', label='Good stars')
 
-	axp1.errorbar(alf2[brightest], clipped2, yerr = total_err[brightest], color='grey', ls='none')
-	axp1.plot(alf2[brightest], clipped2, 'k.', ls='none')
+### Plotting points beyond axis range
+	if(len(alf[full_sample==3])>0):
+		axp1.errorbar(alf[full_sample==3], (av_diff + 0.28), yerr = 0.2, color='r', ls='none', lolims=True)
+	if(len(alf[full_sample==4])>0):
+		axp1.errorbar(alf[full_sample==4], (av_diff - 0.28), yerr = 0.2, color='r', ls='none', uplims=True)
+
+	
 	axp1.axhline(av_diff, color='r', ls='--')
 	axp1.axhline(av_diff+2*sdev_diff, color='b', ls='--')
 	axp1.axhline(av_diff-2*sdev_diff, color='b', ls='--')
 	mp.title(target + ': av_diff = ' + str(av_diff) + ' sdev_diff = ' + str(sdev_diff))
+	mp.legend(loc='upper left')
 
-	axp2 = mp.subplot(212)
 
-	axp2.plot(alf, apc, 'ro', ls='none')
-	axp2.plot(alf2, apc2, 'k.', ls='None')
-	axp2.plot(alf2[brightest], apc2[brightest], 'r.', ls='None')
-
-	mp.show()
+	#mp.show()
 	
 	mp.savefig(target + '.pdf')
 

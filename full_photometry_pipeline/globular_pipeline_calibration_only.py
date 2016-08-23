@@ -21,6 +21,16 @@ import os
 target_name = sys.argv[1]
 channel = sys.argv[2]
 
+if (channel == 1 or channel == '3p6um' or channel == '1'): new_chan = '3p6um'
+elif (channel == 2 or channel == '4p5um' or channel == '2'): new_chan = '4p5um'
+else: 
+	print 'invalid channel'
+	exit(1)
+
+if new_chan == '3p6um': num_chan = 1
+if new_chan == '4p5um': num_chan = 2
+
+
 if (len(glob.glob(target_name + '*' + channel +'*.alf'))==0):
 	print 'You need to run ALLFRAME before you can calibrate the photometry'
 	print 'This is the CALIBRATION ONLY script'

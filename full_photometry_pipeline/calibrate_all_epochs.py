@@ -161,33 +161,60 @@ def calibrate(input):
 			 
 	epoch1 = objects[:,3]
 	epoch1_err = objects[:,4]
+	sorted_epoch1 = np.argsort(epoch1)
+
+	object_sample = np.zeros(num_stars)
+	epoch1_sample = np.zeros(num_stars)
+	difference_sample = np.zeros(num_stars)
+	
+	epoch1_sample = epoch1[sorted_epoch1]
+	object_sample = objects[ : , epoch + 3][sorted_epoch1]
 
 	offsets = np.zeros(num_frames)
 	sdev_offsets = np.zeros(num_frames)
+	howmany_stars = np.zeros(num_frames)
+	offsets_log = re.sub('.mch', '.off_log', output_mch)
+	offsets_log_file = open(offsets_log, 'w')
 
 		 
 	for epoch in np.arange(2, (num_frames*2), 2, dtype=np.int): ## starting from 1 because don't match epoch 1 to itself
-		difference = epoch1 - objects[ : , epoch + 3]
-		ediff = np.sqrt(epoch1_err**2 + objects[ : , epoch + 4]**2)
-		clipped = sigma_clip(difference, sigma = 4., iters=100)
+		object_sample = objects[ : , epoch + 3][sorted_epoch1]
+		difference_sample = epoch1_sample - object_sample
+		mask = np.ma.masked_all(num_stars)
+		
+		#difference = epoch1 - objects[ : , epoch + 3]
+		#ediff = np.sqrt(epoch1_err**2 + objects[ : , epoch + 4]**2)
+		#clipped = sigma_clip(difference, sigma = 3., iters=None)
 
-		av_diff = np.ma.mean(clipped)
-		sdev_diff = np.ma.std(clipped)
+		for mag_bin in np.arange(0,11):
+			mask[(mag_bin)*num_stars*0.1:(mag_bin+1)*num_stars*0.1] = difference_sample[(mag_bin)*num_stars*0.1:(mag_bin+1)*num_stars*0.1] 
+    ## Sigma clip the sample
+			clipped3 = sigma_clip(mask, sigma = 3., iters=None, cenfunc=np.ma.mean)
+    ## Copy the sigma clipped sample to the masked array
+			mask = clipped3
+    
+		clipped50 = sigma_clip(mask[:num_stars*0.5], sigma = 3., iters=None, cenfunc=np.ma.mean)
+		av_diff50 = np.ma.mean(clipped50)
+		sdev_diff50 = np.ma.mean(clipped50)
+
+		av_diff = np.ma.mean(clipped50)
+		sdev_diff = np.ma.std(clipped50)
+		howmany_stars[(epoch/2.)] = clipped50.count()
 		offsets[(epoch/2.)] = av_diff
 		sdev_offsets[(epoch/2.)] = sdev_diff
 
 	
-		print "Epoch " + str((epoch/2.)+1) + " offset " +str(av_diff) + " sdev " + str(sdev_diff)
+		#print "Epoch " + str((epoch/2.)+1) + " offset " +str(av_diff) + " sdev " + str(sdev_diff)
 		mp.close('all')		
 		axp1 = mp.subplot(111)
-		axp1.errorbar(epoch1, clipped, yerr = ediff, color='grey', ls='none')
-		axp1.plot(epoch1, clipped, 'k.', ls='none')	
+		#axp1.errorbar(epoch1, clipped, yerr = ediff, color='grey', ls='none')
+		axp1.plot(epoch1_sample[:num_stars*0.5], clipped50, 'k.', ls='none')	
 		axp1.axhline(av_diff, color='r', ls='--')
 		axp1.axhline(av_diff+2*sdev_diff, color='b', ls='--')
 		axp1.axhline(av_diff-2*sdev_diff, color='b', ls='--')
 		mp.title("Epoch " + str((epoch/2.)+1) + " offset " +str(av_diff) + " sdev " + str(sdev_diff))
 		
-		mp.show()
+		#mp.show()
 		mp.savefig(target  + str(int((epoch/2.)+1)) + '.pdf')
 ## Read the file names from the mch file to make sure the order matches up with the order in the raw file
 
@@ -221,9 +248,22 @@ def calibrate(input):
 	
 	print "Finished offset calibration"
 	
+	std_of_offs = np.ma.std(offsets[1:])
+	mean_of_offs = np.ma.mean(offsets[1:])
+	print std_of_offs, mean_of_offs
+	
 	### Now write an updated mch file with the correct file names
 	
 	final_mch = open('tempmch', 'w')
+	
+	for frame in np.arange(num_frames):
+		offsets_log_file.write("{0:d} {1:8.4f} {2:8.4f} {3:d} \n".format(int(frame), offsets[frame], sdev_offsets[frame], int(howmany_stars[frame])))
+		if ((abs(offsets[frame] - mean_of_offs) > 3*std_of_offs) and (frame!= 0)):
+			print 'OUTLIER:',  int(frame), offsets[frame], sdev_offsets[frame], int(howmany_stars[frame])
+		else: print int(frame), offsets[frame], sdev_offsets[frame], int(howmany_stars[frame])
+		
+		
+	offsets_log_file.close()
 	
 	for line in open(output_mch, 'r'):
 		is_epoch1 = re.search('_e1_', line)
