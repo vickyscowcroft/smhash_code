@@ -226,8 +226,9 @@ def calibrate(input):
 		## So don't append it to the list of files to work on
 		if (is_epoch1==None):
 			names.append(splitline[0].split("\'")[1])
-		
-	epoch_count = 0
+	print len(names)
+	print len(offsets)
+	epoch_count = 1	
 	for count in np.arange(0, len(names)):
 		mtr_name = re.sub(".alf", ".mtr", str(names[count]))
 		off_name = re.sub(".alf", ".off", str(names[count]))
@@ -239,7 +240,7 @@ def calibrate(input):
 			output_mtr.write(header)
 		input_mtr.close()
 		output_mtr.close()
-		print mtr_name, off_name
+		#print mtr_name, off_name
 		id, xc, yc, mag, err = np.loadtxt(mtr_name, skiprows=3, usecols=(0, 1, 2, 3, 4), unpack='TRUE')
 		newmag = mag + offsets[epoch_count]
 		np.savetxt(off_name, np.column_stack((id, xc, yc, newmag, err)), fmt= "%d %.2f %.2f %.3f %.3f")				
@@ -256,10 +257,10 @@ def calibrate(input):
 	
 	final_mch = open('tempmch', 'w')
 	
-	for frame in np.arange(num_frames):
-		offsets_log_file.write("{0:d} {1:8.4f} {2:8.4f} {3:d} \n".format(int(frame), offsets[frame], sdev_offsets[frame], int(howmany_stars[frame])))
+	for frame in np.arange(1,num_frames):
+		offsets_log_file.write("{0:d} {1:8.4f} {2:8.4f} {3:d} \n".format(int(frame+1), offsets[frame], sdev_offsets[frame], int(howmany_stars[frame])))
 		if ((abs(offsets[frame] - mean_of_offs) > 3*std_of_offs) and (frame!= 0)):
-			print 'OUTLIER:',  int(frame), offsets[frame], sdev_offsets[frame], int(howmany_stars[frame])
+			print 'OUTLIER:',  int(frame), offsets[frame+1], sdev_offsets[frame+1], int(howmany_stars[frame+1])
 		else: print int(frame), offsets[frame], sdev_offsets[frame], int(howmany_stars[frame])
 		
 		
