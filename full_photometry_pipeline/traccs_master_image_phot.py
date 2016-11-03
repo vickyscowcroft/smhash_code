@@ -11,14 +11,14 @@ import glob
 import pandas as pd
 from itertools import islice
 
-def sgr_median_image_phot(fitsfile, fixtrans):
+def traccs_master_image_phot(fitsfile, fixtrans):
 
 	image = re.sub(".fits", "", fitsfile)
 	is1 = re.search('3p6um', image)
 	if (is1 != None):
-		imstem = re.sub("_3p6um_med_dn","", image)
+		imstem = re.sub("_3p6um_dn","", image)
 	else:
-		imstem = re.sub("_4p5um_med_dn","", image)
+		imstem = re.sub("_4p5um_dn","", image)
 	print 'made it past the first hurdle!'
 
 	## Copy the daophot opt file
@@ -129,9 +129,11 @@ def sgr_median_image_phot(fitsfile, fixtrans):
 	daophot.expect("File with parameter values")
 	daophot.sendline("")
 	daophot.expect("OPT>")
-	daophot.sendline("th=13")
+	daophot.sendline("th=100")
 	daophot.expect("OPT>")
-	daophot.sendline("lo=10")
+	daophot.sendline("lo=3")
+	daophot.expect("OPT>")
+	daophot.sendline("hi=20000")
 	daophot.expect("OPT>")
 	daophot.sendline("")
 
@@ -139,7 +141,7 @@ def sgr_median_image_phot(fitsfile, fixtrans):
 	daophot.expect("Command:")
 	daophot.sendline("find")
 	daophot.expect("Number of frames averaged, summed:")
-	daophot.sendline("1, 10")
+	daophot.sendline("10, 10")
 	daophot.expect("File for positions")
 	daophot.sendline("")
 	daophot.expect("Are you happy with this?")
@@ -321,7 +323,7 @@ def sgr_median_image_phot(fitsfile, fixtrans):
 ### x(1) = a + c x(n) + e y(n)
 ### y(1) = b + d y(n) + f y(n)
 
-##  x(1), y(1) are the epoch 1 coords, x(n), y(n) are the median frame coords
+##  x(1), y(1) are the epoch 1 coords, x(n), y(n) are the master frame coords
 
 	## grab header
 	
@@ -378,7 +380,7 @@ def sgr_median_image_phot(fitsfile, fixtrans):
 	### x(1) = a + c x(n) + e y(n)
 	### y(1) = b + d y(n) + f y(n)
 
-	##  x(1), y(1) are the epoch 1 coords, x(n), y(n) are the median frame coords
+	##  x(1), y(1) are the epoch 1 coords, x(n), y(n) are the master frame coords
 
 	## grab header
 	

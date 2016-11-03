@@ -80,9 +80,9 @@ def calc_apcor(flux_image, input, sigma, target):
 
 ### Plotting points beyond axis range
 	if(len(alf[full_sample==3])>0):
-		axp1.errorbar(alf[full_sample==3], (av_diff + 0.28), yerr = 0.2, color='r', ls='none', lolims=True)
+		axp1.errorbar(alf[full_sample==3], np.ones_like(alf[full_sample==3])*(av_diff + 0.28), yerr = 0.2, color='r', ls='none', lolims=True)
 	if(len(alf[full_sample==4])>0):
-		axp1.errorbar(alf[full_sample==4], (av_diff - 0.28), yerr = 0.2, color='r', ls='none', uplims=True)
+		axp1.errorbar(alf[full_sample==4], np.ones_like(alf[full_sample==4])*(av_diff - 0.28), yerr = 0.2, color='r', ls='none', uplims=True)
 
 	
 	axp1.axhline(av_diff, color='r', ls='--')

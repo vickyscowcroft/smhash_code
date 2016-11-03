@@ -6,19 +6,22 @@
 
 import sys
 import glob
-import sgr_setup
-import sgr_initial_phot
-import sgr_pre_allframe_matching
-import sgr_median_image_phot
 import shutil
 import re
 import pexpect
+import os
+
+
+import sgr_setup
+import sgr_initial_phot
+import sgr_pre_allframe_matching
+import traccs_master_image_phot
 import aperture_correction_photometry
 import calculate_aperture_correction_testing
 import apply_aperture_correction
 import calibrate_all_epochs
 import all_location_corrections
-import os
+
 
 
 target_name = sys.argv[1]
@@ -75,12 +78,12 @@ print target_stem
 sgr_pre_allframe_matching.sgr_pre_allframe_matching(target_stem, num_chan)
 print 'completed pre allframe matching?'
 
-## Do the photometry on the median image and calculate it's offset from epoch 1
+## Do the photometry on the master image and calculate it's offset from epoch 1
 
-median_name = target_stem + '_' + new_chan + '_med_dn.fits'
-print 'median name is ', median_name
+master_name = target_stem + '_' + new_chan + '_dn.fits'
+print 'master name is ', master_name
 
-sgr_median_image_phot.sgr_median_image_phot(median_name, True)
+traccs_master_image_phot.traccs_master_image_phot(master_name, True)
 
 ## ALLFRAEME
 

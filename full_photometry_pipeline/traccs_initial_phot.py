@@ -15,9 +15,9 @@ def init_aper_phot(fitsfile, channel):
 
 ## Copy the daophot opt file
 	if (channel == 1):
-		shutil.copy("/Users/vs/Dropbox/Python/smhash_code/daophot-spitzer-i1.opt", "daophot.opt")
+		shutil.copy("/Users/vs/Dropbox/Python/smhash_code/daophot-traccs-i1.opt", "daophot.opt")
 	if (channel == 2):
-		shutil.copy("/Users/vs/Dropbox/Python/smhash_code/daophot-spitzer-i2.opt", "daophot.opt")
+		shutil.copy("/Users/vs/Dropbox/Python/smhash_code/daophot-traccs-i2.opt", "daophot.opt")
 
 	shutil.copy("/Users/vs/Dropbox/Python/smhash_code/photo-spitzer.opt", "photo.opt")
 
@@ -54,7 +54,7 @@ def init_aper_phot(fitsfile, channel):
 	daophot.expect("Command:")
 	daophot.sendline("find")
 	daophot.expect("Number of frames averaged, summed:")
-	daophot.sendline("1,1")
+	daophot.sendline("10,10")
 	#daophot.sendline("1," + str(np.sqrt(n_bcds)))
 	daophot.expect("File for positions")
 	daophot.sendline("")

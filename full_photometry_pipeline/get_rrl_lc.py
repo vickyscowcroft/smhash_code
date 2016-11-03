@@ -10,47 +10,41 @@ import sys
 import glob
 import re
 
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+
 ## input = target_name from original script, image_stem
 
 
 target_name = sys.argv[1]
-location = sys.argv[2]
+coords = sys.argv[2]
+
+period = float(sys.argv[3])
+
+if(sys.argv[4] != ''):
+	target = sys.argv[4]
+else:
+	target = target_name
+	
+outname = re.sub(' ', '_', target)
 
 
-if(location=='orphan'):
-	cat_target = target_name
-	cat_name = '/Users/vs/Dropbox/SMHASH/orphan_rrlyrae_catalogue'
-	image_stem = cat_target
+ra = SkyCoord(coords, unit=(u.hourangle, u.deg)).ra
+dec = SkyCoord(coords, unit=(u.hourangle, u.deg)).dec
 
-if(location=='sgr_stream'):
-	cat_target = target_name[0:11] + '.' + target_name[12:20]
-	cat_name = '/Users/vs/Dropbox/SMHASH/catalina_sagittarius_rrlyrae_catalogue'
-	image_stem = re.sub("CSS_","", cat_target)
+css = re.search('css', target_name)
+can_split = re.search('_', target_name)
+    
+if (css != None):
+	image_stem = re.sub("CSS_","", target_name)
 	image_stem = new_target_stem[0:7]
-if(location=='traccs'):
-	cat_target = target_name.split('_')[1]
-	cat_name = 	'/Users/vs/Dropbox/TRACCS/traccs_rrlyrae_catalogue'
-	image_stem = 'L_' + cat_target
-	
-	
-
-
-
-target = cat_target
+elif (can_split != None):
+	image_stem = str(target_name.split('_', 1)[0][0]) + '_' + str(target_name.split('_', 1)[1])
+else:
+	image_stem = target_name
+		
 fitsfile = image_stem + '_e1_3p6um.fits'
-with open(cat_name, 'r') as searchfile:
-	for line in searchfile:
-		if target in line:
-			data = line.split()
-			ra = float(data[1])
-			dec = float(data[2])
-			if(location=='orphan'):
-				period = float(data[9])
-			if(location=='sgr_stream'):
-				period = float(data[4])
-			if(location=='traccs'):
-				period = float(data[18])
-print ra, dec
+print ra, dec, period
 
 fig = aplpy.FITSFigure(fitsfile)
 rr_x, rr_y = fig.world2pixel(ra, dec)
@@ -141,7 +135,7 @@ err_long = np.concatenate((err, err, err, err, err))
 obs = np.arange(1, num_frames+1, 1)
 
 
-output = image_stem + '_rrlyrae.data'
+output = outname + '_rrlyrae.data'
 output_file = open(output, "w")
 
 for frame in np.arange(0, num_frames):
@@ -164,7 +158,7 @@ mp.ylabel('[3.6]')
 mp.title(target + ', P = ' + str(period) +' d')
 #mp.show()
 
-mp.savefig(image_stem +'.pdf')
+mp.savefig(outname +'.pdf')
 
 mp.close()
 mp.clf()
@@ -179,7 +173,7 @@ axp2.plot(obs, mag, 'ko', ls='None')
 mp.xlabel('Observation Number')
 mp.ylabel('[3.6]')
 mp.title(target + ', P = ' + str(period) +' d')
-mp.savefig(image_stem +'_timeseries.pdf')
+mp.savefig(outname +'_timeseries.pdf')
 
 #mp.close()
 

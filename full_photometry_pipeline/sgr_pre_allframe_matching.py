@@ -8,6 +8,7 @@ import sys
 import re
 import subprocess
 
+
 def sgr_pre_allframe_matching(target, channel):
 
 	targ_regex = re.compile(target)
@@ -21,6 +22,7 @@ def sgr_pre_allframe_matching(target, channel):
 	file_list = glob.glob('*_e*.ap*')
 	file_list = filter(targ_regex.search, file_list) ## filters out files that don't correspond to this target
 	file_list = filter(chan_regex.search, file_list) ## filters out channels that are the wrong channel
+	print file_list
 
 ## Need to also remove epoch 1 from the file list as it's special 
 
@@ -60,7 +62,7 @@ def sgr_pre_allframe_matching(target, channel):
 	daomatch.expect('Next input file')
 	daomatch.sendline('')
 	daomatch.close(force=True)
-#print daomatch.isalive()
+	print daomatch.isalive()
 
 ## running daomaster
 	print "running daomaster"

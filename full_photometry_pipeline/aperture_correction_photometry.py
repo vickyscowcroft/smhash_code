@@ -56,11 +56,11 @@ def apcor_photo(image):
 		for count in range(0,2): 
 			line = orig.readline()
 			header.append(line)
-	## Setting lobad data to 0.0 on the flux image so that it can get the photometry done
+	## Setting lobad data to -10.0 on the flux image so that it can get the photometry done
 	photdata = np.loadtxt(image + '_dn.alf', skiprows=3)
 	outfile = open(image + '_alf.alf', 'w')
 	splitline = header[1].split()
-	splitline[3] = 0.0
+	splitline[3] = -10.0
 	outfile.write("{10:s} {0:>2d}{1:>6d}{2:>6d}{3:>8.1f}{4:>8.0f}{5:>8.2f}{6:>8.2f}{7:>8.2f}{8:>8.2f}{9:>8.2f} \n".format(int(splitline[0]), int(splitline[1]), int(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]), float(splitline[8]), float(splitline[9]), header[0]))
 	outfile.write('\n')
 	np.savetxt(outfile, photdata, fmt='  %d %.3f %.3f %.3f %.3f %.2f %0.f %.2f %.3f')
@@ -134,7 +134,16 @@ def apcor_photo(image):
 	daophot = pexpect.spawn("daophot")
 	daophot.logfile = sys.stdout
 	daophot.expect("Command:")
+	
 	daophot.sendline("at " + image)
+	daophot.expect("Command:")
+	daophot.sendline("opt")
+	daophot.expect("File with parameter values")
+	daophot.sendline("")
+	daophot.expect("OPT>")
+	daophot.sendline("lo=0")
+	daophot.expect("OPT>")
+	daophot.sendline("")
 	daophot.expect("Command:")
 	daophot.sendline("phot")
 	daophot.expect("File with aperture radii")

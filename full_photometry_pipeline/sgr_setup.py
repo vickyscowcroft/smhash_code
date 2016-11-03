@@ -15,16 +15,22 @@ from  convert_spitzer_flux_to_dn  import *
 
 def sgr_setup(target_name, channel):
 
-## only want to do this for sgr targets - skip for orphan etc
-##TO DO - fix for orphan
+### Alter the name for targets with long names
+### i.e. CSS, linear etc
 
-    css = re.search('css', target_name)
-    if (css != None):
-        new_target_stem = re.sub("CSS_","", target_name)
-        new_target_stem = new_target_stem[0:7]
-    else:
-        new_target_stem = target_name
+	css = re.search('css', target_name)
+	can_split = re.search('_', target_name)
+    
+	if (css != None):
+		new_target_stem = re.sub("CSS_","", target_name)
+		new_target_stem = new_target_stem[0:7]
+	elif (can_split != None):
+		new_target_stem = str(target_name.split('_', 1)[0][0]) + '_' + str(target_name.split('_', 1)[1])
+	else:
+		new_target_stem = target_name
+		
 	## Clean up old versions
+
 	old_files = [ '.alf', '.apc', '.als', '.coo', '.ap', '.raw', '.nmg', '.tfr', '.mch', '.mtr', '.off']
 	for ofn in old_files:
 		olds = glob.glob('*' + ofn)
@@ -40,18 +46,21 @@ def sgr_setup(target_name, channel):
 ## Otherwise the extra epochs fuck up the correction stage
 
 	regex = re.compile(new_target_stem) ## creating a regex to find only the images corresponding to this target
-	files = glob.glob('*_e*' + channel + '.fits') ## These are the original images
-	files = filter(regex.search, files)	
+	old_regex = re.compile(target_name)
+	files = list(set(glob.glob('*_e*' + channel + '.fits') + glob.glob('*correction*.fits')))## These are the original images and the correction images
+	#files = filter(regex.search, files)	
+	original_names = filter(old_regex.search, files)
 	#print files
 
 	ch1 = 12
 	ch2 = 12
 
-	for filename in files:
+	for filename in original_names:
 	## Just change file names of correction images
 		corr = re.search('correction', filename)
 		if (corr != None):
 			new_corr_name = re.sub('__e', '_e', filename)
+			new_corr_name = re.sub(target_name, new_target_stem, new_corr_name)
 			shutil.move(filename, new_corr_name)
 			continue
 		if (corr == None):
@@ -90,8 +99,10 @@ def sgr_setup(target_name, channel):
 	#print image_name
 		if (os.path.isfile(image_name) and os.path.isfile(median_name)):
 			spitzer_flux2dn_mos(image_name, median_name, new_target_stem, channel)
-		shutil.copy(target_name + '__e1_' + channel + '.fits', new_target_stem + '_e1_' + channel +'.fits')
 		
+		elif (os.path.isfile(image_name) and (os.path.isfile(median_name)==False)):	
+			spitzer_flux2dn(image_name)
+		shutil.copy(target_name + '__e1_' + channel + '.fits', new_target_stem + '_e1_' + channel +'.fits')
 		
 	return(new_target_stem)
 
