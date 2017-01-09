@@ -9,6 +9,7 @@ import matplotlib.pyplot as mp
 import sys
 import glob
 import re
+import sgr_setup
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -28,20 +29,16 @@ else:
 	
 outname = re.sub(' ', '_', target)
 
-
-ra = SkyCoord(coords, unit=(u.hourangle, u.deg)).ra
-dec = SkyCoord(coords, unit=(u.hourangle, u.deg)).dec
-
-css = re.search('css', target_name)
-can_split = re.search('_', target_name)
-    
-if (css != None):
-	image_stem = re.sub("CSS_","", target_name)
-	image_stem = new_target_stem[0:7]
-elif (can_split != None):
-	image_stem = str(target_name.split('_', 1)[0][0]) + '_' + str(target_name.split('_', 1)[1])
-else:
-	image_stem = target_name
+is_hrs = re.search(":", coords)
+if (is_hrs != None):
+	ra = SkyCoord(coords, unit=(u.hourangle, u.deg)).ra
+	dec = SkyCoord(coords, unit=(u.hourangle, u.deg)).dec
+is_deg = re.search("d", coords)
+if (is_deg != None):
+	ra = SkyCoord(coords, unit=(u.deg, u.deg)).ra
+	dec = SkyCoord(coords, unit=(u.deg, u.deg)).dec
+	
+image_stem = sgr_setup.get_target_stem(target)    
 		
 fitsfile = image_stem + '_e1_3p6um.fits'
 print ra, dec, period
@@ -158,7 +155,7 @@ mp.ylabel('[3.6]')
 mp.title(target + ', P = ' + str(period) +' d')
 #mp.show()
 
-mp.savefig(outname +'.pdf')
+mp.savefig(outname +'_lc.pdf')
 
 mp.close()
 mp.clf()

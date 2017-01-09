@@ -39,10 +39,10 @@ def apcor_photo(image):
 			line = orig.readline()
 			header.append(line)
 	## Setting lobad data to 0.0 on the flux image so that it can get the photometry done
-	photdata = np.loadtxt(image + '_dn.lst', skiprows=3)
+	photdata = np.loadtxt(image + '_dn.lst', skiprows=3, usecols=(0,1,2,3,4,5))
 	outfile = open(image + '_lst.lst', 'w')
 	splitline = header[1].split()
-	splitline[3] = 0.0
+	splitline[3] = -100.0
 	outfile.write("{10:s} {0:>2d}{1:>6d}{2:>6d}{3:>8.1f}{4:>8.0f}{5:>8.2f}{6:>8.2f}{7:>8.2f}{8:>8.2f}{9:>8.2f} \n".format(int(splitline[0]), int(splitline[1]), int(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]), float(splitline[8]), float(splitline[9]), header[0]))
 	outfile.write('\n')
 	np.savetxt(outfile, photdata, fmt='%d %.2f %.2f %.3f %.3f %.2f')

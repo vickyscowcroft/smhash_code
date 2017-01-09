@@ -18,12 +18,12 @@ def sgr_setup(target_name, channel):
 ### Alter the name for targets with long names
 ### i.e. CSS, linear etc
 
-	css = re.search('css', target_name)
+	css = re.search('css', str.lower(target_name))
 	can_split = re.search('_', target_name)
     
 	if (css != None):
-		new_target_stem = re.sub("CSS_","", target_name)
-		new_target_stem = new_target_stem[0:7]
+		#new_target_stem = re.sub("CSS_","", target_name)
+		new_target_stem = target_name[0:11]
 	elif (can_split != None):
 		new_target_stem = str(target_name.split('_', 1)[0][0]) + '_' + str(target_name.split('_', 1)[1])
 	else:
@@ -45,8 +45,12 @@ def sgr_setup(target_name, channel):
 ## Also need to change the names of the correction images
 ## Otherwise the extra epochs fuck up the correction stage
 
-	regex = re.compile(new_target_stem) ## creating a regex to find only the images corresponding to this target
-	old_regex = re.compile(target_name)
+	regex = re.compile(re.sub('_', '\_', new_target_stem)) ## creating a regex to find only the images corresponding to this target
+	regex_target = re.sub('_', '\_', target_name)
+	regex_target = re.sub('\+', '\+', regex_target)
+	regex_target = re.sub('\-', '\-', regex_target)
+
+	old_regex = re.compile(regex_target)
 	files = list(set(glob.glob('*_e*' + channel + '.fits') + glob.glob('*correction*.fits')))## These are the original images and the correction images
 	#files = filter(regex.search, files)	
 	original_names = filter(old_regex.search, files)
@@ -55,12 +59,16 @@ def sgr_setup(target_name, channel):
 	ch1 = 12
 	ch2 = 12
 
+	print 'target name = ', target_name
+	print 'new_target_stem = ', new_target_stem
+	
+
 	for filename in original_names:
 	## Just change file names of correction images
 		corr = re.search('correction', filename)
 		if (corr != None):
 			new_corr_name = re.sub('__e', '_e', filename)
-			new_corr_name = re.sub(target_name, new_target_stem, new_corr_name)
+			new_corr_name = re.sub(regex_target, new_target_stem, new_corr_name) 
 			shutil.move(filename, new_corr_name)
 			continue
 		if (corr == None):
@@ -101,7 +109,8 @@ def sgr_setup(target_name, channel):
 			spitzer_flux2dn_mos(image_name, median_name, new_target_stem, channel)
 		
 		elif (os.path.isfile(image_name) and (os.path.isfile(median_name)==False)):	
-			spitzer_flux2dn(image_name)
+			new_name = new_target_stem + '_' + channel + '_dn.fits'
+			spitzer_flux2dn(image_name, new_name)
 		shutil.copy(target_name + '__e1_' + channel + '.fits', new_target_stem + '_e1_' + channel +'.fits')
 		
 	return(new_target_stem)
@@ -152,15 +161,30 @@ def setup_dir_structure(target_name, channel):
 			os.mkdir(new_dir)
 		os.chdir(new_dir)
 	
-	regex = re.compile(target_name)
+	regex_target = re.sub('_', '\_', target_name)
+	regex_target = re.sub('\+', '\+', regex_target)
+	regex_target = re.sub('\-', '\-', regex_target)
+	regex = re.compile(regex_target)
 
 	file_list = glob.glob('../*/*.fits')
 	file_list = filter(regex.search, file_list)
-	print file_list
 	epoch_link_list = [x.split('/', 2)[2] for x in file_list]
+	if (len(file_list) == 0):
+		file_list = glob.glob('../*.fits')
+		file_list = filter(regex.search, file_list)
+		epoch_link_list = [x.split('/', 1)[1] for x in file_list]
+
+	
+	print file_list
 	mosaic_list = glob.glob('../MegaMosaics/*/*.fits')
 	mosaic_list = filter(regex.search, mosaic_list)
 	mosaic_link_list = [x.split('/', 3)[3] for x in mosaic_list]
+
+	if (len(mosaic_list) == 0):
+		mosaic_list = glob.glob('../../MegaMosaics/*.fits')
+		mosaic_list = filter(regex.search, mosaic_list)
+		mosaic_link_list = [x.split('/', 3)[3] for x in mosaic_list]
+
 	for count in range(len(file_list)):
 		#print file_list[count], epoch_link_list[count]
 		try:
@@ -180,8 +204,20 @@ def setup_dir_structure(target_name, channel):
 	print 'Directory structure set up'	
 	return(channel)
 		
+def get_target_stem(target_name):
 	
-		
+	css = re.search('css', str.lower(target_name))
+	can_split = re.search('_', target_name)
+    
+	if (css != None):
+		#new_target_stem = re.sub("CSS_","", target_name)
+		new_target_stem = target_name[0:11]
+	elif (can_split != None):
+		new_target_stem = str(target_name.split('_', 1)[0][0]) + '_' + str(target_name.split('_', 1)[1])
+	else:
+		new_target_stem = target_name
+	return(new_target_stem)
+
 		
 		
 		
