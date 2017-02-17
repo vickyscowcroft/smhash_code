@@ -22,8 +22,8 @@ def sgr_median_image_phot(fitsfile, fixtrans):
 	print 'made it past the first hurdle!'
 
 	## Copy the daophot opt file
-	shutil.copy("/Users/vs/Dropbox/Python/smhash_code/daophot-spitzer-i1.opt", "daophot.opt")
-	shutil.copy("/Users/vs/Dropbox/Python/smhash_code/photo-spitzer.opt", "photo.opt")
+	shutil.copy("/Users/vs522/Dropbox/Python/smhash_code/daophot-spitzer-i1.opt", "daophot.opt")
+	shutil.copy("/Users/vs522/Dropbox/Python/smhash_code/photo-spitzer.opt", "photo.opt")
 
 	print "Working on " + image
 ## Clean up previous runs

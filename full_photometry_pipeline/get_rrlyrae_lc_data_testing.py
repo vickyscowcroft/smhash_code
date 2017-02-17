@@ -19,17 +19,17 @@ location = sys.argv[2]
 
 if(location=='orphan'):
 	cat_target = target_name
-	cat_name = '/Users/vs/Dropbox/SMHASH/orphan_rrlyrae_catalogue'
+	cat_name = '/Users/vs522/Dropbox/SMHASH/orphan_rrlyrae_catalogue'
 	image_stem = cat_target
 
 if(location=='sgr_stream'):
 	cat_target = target_name[0:11] + '.' + target_name[12:20]
-	cat_name = '/Users/vs/Dropbox/SMHASH/catalina_sagittarius_rrlyrae_catalogue'
+	cat_name = '/Users/vs522/Dropbox/SMHASH/catalina_sagittarius_rrlyrae_catalogue'
 	image_stem = re.sub("CSS_","", cat_target)
 	image_stem = new_target_stem[0:7]
 if(location=='traccs'):
 	cat_target = target_name.split('_')[1]
-	cat_name = 	'/Users/vs/Dropbox/TRACCS/traccs_rrlyrae_catalogue'
+	cat_name = 	'/Users/vs522/Dropbox/TRACCS/traccs_rrlyrae_catalogue'
 	image_stem = 'L_' + cat_target
 	
 	

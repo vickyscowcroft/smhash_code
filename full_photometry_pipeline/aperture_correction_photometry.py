@@ -29,7 +29,7 @@ def apcor_photo(image):
 
 
 	if(os.path.isfile("apcor_photo.opt")): os.remove("apcor_photo.opt")
-	shutil.copy("/Users/vs/Dropbox/Python/smhash_code/apcor_photo.opt", "apcor_photo.opt")
+	shutil.copy("/Users/vs522/Dropbox/Python/smhash_code/apcor_photo.opt", "apcor_photo.opt")
 
 	if(os.path.isfile(image + '.apc')): os.remove(image + '.apc')
 	

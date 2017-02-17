@@ -15,11 +15,11 @@ def init_aper_phot(fitsfile, channel):
 
 ## Copy the daophot opt file
 	if (channel == 1):
-		shutil.copy("/Users/vs/Dropbox/Python/smhash_code/daophot-traccs-i1.opt", "daophot.opt")
+		shutil.copy("/Users/vs522/Dropbox/Python/smhash_code/daophot-traccs-i1.opt", "daophot.opt")
 	if (channel == 2):
-		shutil.copy("/Users/vs/Dropbox/Python/smhash_code/daophot-traccs-i2.opt", "daophot.opt")
+		shutil.copy("/Users/vs522/Dropbox/Python/smhash_code/daophot-traccs-i2.opt", "daophot.opt")
 
-	shutil.copy("/Users/vs/Dropbox/Python/smhash_code/photo-spitzer.opt", "photo.opt")
+	shutil.copy("/Users/vs522/Dropbox/Python/smhash_code/photo-spitzer.opt", "photo.opt")
 
 	print "Working on " + image
 ## Clean up previous runs

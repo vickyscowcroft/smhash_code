@@ -31,9 +31,9 @@ def calc_apcor(flux_image, input, sigma, target, cat_name):
 				data = line.split()
 				ra = float(data[1])
 				dec = float(data[2])
-				if(cat_name=='/Users/vs/Dropbox/SMHASH/orphan_rrlyrae_catalogue'):
+				if(cat_name=='/Users/vs522/Dropbox/SMHASH/orphan_rrlyrae_catalogue'):
 					period = float(data[9])
-				if(cat_name=='/Users/vs/Dropbox/SMHASH/catalina_sagittarius_rrlyrae_catalogue'):
+				if(cat_name=='/Users/vs522/Dropbox/SMHASH/catalina_sagittarius_rrlyrae_catalogue'):
 					period = float(data[4])
 
 

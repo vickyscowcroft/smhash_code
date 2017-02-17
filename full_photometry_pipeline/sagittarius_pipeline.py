@@ -24,10 +24,10 @@ location = sys.argv[2] ## location is the location of the RRL - can currently be
 
 if(location=='orphan'):
 	cat_target = target_name
-	cat_name = '/Users/vs/Dropbox/SMHASH/orphan_rrlyrae_catalogue'
+	cat_name = '/Users/vs522/Dropbox/SMHASH/orphan_rrlyrae_catalogue'
 if(location=='sgr_stream'):
 	cat_target = target_name[0:11] + '.' + target_name[12:20]
-	cat_name = '/Users/vs/Dropbox/SMHASH/catalina_sagittarius_rrlyrae_catalogue'
+	cat_name = '/Users/vs522/Dropbox/SMHASH/catalina_sagittarius_rrlyrae_catalogue'
 
 ## Convert the images to counts and give them sensible names
 ## Also cleans up old runs
