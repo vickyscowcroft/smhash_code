@@ -156,6 +156,10 @@ epoch1_err = objects[:,4]
 offsets = np.zeros(num_frames)
 sdev_offsets = np.zeros(num_frames)
 
+fig, axs = mp.subplots(2, num_frames/2., figsize=(15, 6), facecolor='w', edgecolor='k')
+fig.subplots_adjust(hspace = .5, wspace=.001)
+axs = axs.ravel()
+
 		 
 for epoch in np.arange(2, (num_frames*2), 2): ## starting from 1 because don't match epoch 1 to itself
 	difference = epoch1 - objects[ : , epoch + 3]
@@ -169,13 +173,12 @@ for epoch in np.arange(2, (num_frames*2), 2): ## starting from 1 because don't m
 
 	
 	print "Epoch " + str((epoch/2.)+1) + " offset " +str(av_diff) + " sdev " + str(sdev_diff)
-	mp.close('all')		
-	axp1 = mp.subplot(111)
-	axp1.errorbar(epoch1, clipped, yerr = ediff, color='grey', ls='none')
-	axp1.plot(epoch1, clipped, 'k.', ls='none')	
-	axp1.axhline(av_diff, color='r', ls='--')
-	axp1.axhline(av_diff+2*sdev_diff, color='b', ls='--')
-	axp1.axhline(av_diff-2*sdev_diff, color='b', ls='--')
+
+	axs[epoch-1].errorbar(epoch1, clipped, yerr = ediff, color='grey', ls='none')
+	axs[epoch-1].plot(epoch1, clipped, 'k.', ls='none')	
+	axs[epoch-1].axhline(av_diff, color='r', ls='--')
+	axs[epoch-1].axhline(av_diff+2*sdev_diff, color='b', ls='--')
+	axs[epoch-1].axhline(av_diff-2*sdev_diff, color='b', ls='--')
 
 	mp.show()
 

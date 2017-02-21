@@ -134,8 +134,13 @@ def calibrate(input):
 ## Example of how to read in a variable length multi line file!!!
 	with open(target + '.raw') as raw_file:
 		lines = []
-		## skip the 3 header lines
-		for count in np.arange(0,3): raw_file.readline()
+		## skip the 3 header lines if they exist
+		firstline = raw_file.readline()
+		isheader = re.search('NL', firstline)
+		if (isheader!=None):
+			for count in np.arange(0,2): raw_file.readline()
+		else:
+			raw_file.seek(0)
 		while True:
 			line = list(itertools.islice(raw_file, n_lines_raw))
 			if line:

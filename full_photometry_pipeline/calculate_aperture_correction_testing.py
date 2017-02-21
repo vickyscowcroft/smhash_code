@@ -29,10 +29,10 @@ def calc_apcor(flux_image, input, sigma, target, error_limit):
 	## Cutting the difference arrays so they only include stars in the good image region:
 	#difference  = apc - alf
 
-	apc2 = apc[(ealf < error_limit)]
-	alf2 = alf[(ealf < error_limit)]
-	ealf2 = ealf[(ealf < error_limit)]
-	eapc2 = eapc[(ealf < error_limit)]
+	apc2 = apc[(ealf < error_limit)& (eapc < error_limit)]
+	alf2 = alf[(ealf < error_limit)& (eapc < error_limit)]
+	ealf2 = ealf[(ealf < error_limit)& (eapc < error_limit)]
+	eapc2 = eapc[(ealf < error_limit)& (eapc < error_limit)]
 	difference = apc2 - alf2
 	diff2 = apc - alf
 	err2 = np.sqrt(eapc**2 + ealf**2)
@@ -52,6 +52,7 @@ def calc_apcor(flux_image, input, sigma, target, error_limit):
 	av_diff = np.ma.mean(clipped2)
 	sdev_diff = np.ma.std(clipped2)
 
+### It's because you sorted them by brightness!!!
 
 	total_err = np.sqrt(eapc2**2 + ealf2**2)
 	
@@ -84,11 +85,11 @@ def calc_apcor(flux_image, input, sigma, target, error_limit):
 	mp.ylim(av_diff - 2*error_limit, av_diff + 2*error_limit)
 	
 	axp1.errorbar(alf[full_sample==2], diff2[full_sample==2], yerr = err2[full_sample==2], color='r', ls='none')
-	axp1.errorbar(alf[full_sample==1], diff2[full_sample==1], yerr = err2[full_sample==1], color='b', ls='none')
+	#axp1.errorbar(alf[full_sample==1], diff2[full_sample==1], yerr = err2[full_sample==1], color='b', ls='none')
 	axp1.errorbar(alf2[alf2_sample==0], clipped2[alf2_sample==0], yerr = total_err[alf2_sample==0], color='grey', ls='none')
 	
 	axp1.plot(alf[full_sample==2], diff2[full_sample==2], 'ro', ls='none', label='Error cut', alpha=0.5)
-	axp1.plot(alf[full_sample==1], diff2[full_sample==1], 'bo', ls='none', label='sigma clipped', alpha=0.5)
+	#axp1.plot(alf2[clipped2==1], diff2[clipped2==1], 'bo', ls='none', label='sigma clipped', alpha=0.5)
 	axp1.plot(alf2[alf2_sample==0], clipped2[alf2_sample==0], 'ko', ls='none', label='Good stars')
 
 ### Plotting points beyond axis range
@@ -101,7 +102,7 @@ def calc_apcor(flux_image, input, sigma, target, error_limit):
 	axp1.axhline(av_diff, color='k', ls='--')
 	axp1.axhline(av_diff+2*sdev_diff, color='b', ls='--')
 	axp1.axhline(av_diff-2*sdev_diff, color='b', ls='--')
-	mp.title(target + ': av_diff = ' + str(np.round(av_diff, decimals=3)) + ' sdev_diff = ' + str(np.around(sdev_diff, decimals=3)) + ' nstars = ' + str(len(alf[full_sample==0])))
+	mp.title(target + ': av_diff = ' + str(np.round(av_diff, decimals=3)) + ' sdev_diff = ' + str(np.around(sdev_diff, decimals=3)) + ' nstars = ' + str(clipped2.count()), fontsize=12)
 	
 	mp.legend(loc='upper left')
 
