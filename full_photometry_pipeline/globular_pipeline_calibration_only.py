@@ -64,7 +64,7 @@ aperture_correction_photometry.apcor_photo(flux_epoch_1)
 cat_name = 'globular'
 
 ## The 2.0 on the input here refers to the sigma clipping, not the channel
-apcor, sdev_apcor = calculate_aperture_correction_testing.calc_apcor(flux_epoch_1, 'apcor.raw', 2.0, target_stem)
+apcor, sdev_apcor = calculate_aperture_correction_testing.calc_apcor(flux_epoch_1, 'apcor.raw', 2.0, target_stem, 0.1)
 
 apply_aperture_correction.apply_apcor(target_stem + '_e1_' + new_chan + '_dn.alf', apcor, num_chan)
 
